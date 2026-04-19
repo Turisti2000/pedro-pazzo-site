@@ -7,290 +7,658 @@
   <meta name="description" content="Pedro records music somewhere in Finland.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Bungee&family=Inter:wght@500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Rubik+Mono+One&family=Special+Elite&family=Stardos+Stencil:wght@700&display=swap" rel="stylesheet">
   <style>
-    *, *::before, *::after {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-
     :root {
       --burgundy: #800020;
-      --black:    #0A0A0A;
-      --white:    #F2F2F0;
+      --white: #ffffff;
+      --black: #0a0a0a;
     }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     html, body {
       height: 100%;
+      background: var(--burgundy);
+      color: var(--white);
+      overflow-x: hidden;
     }
 
     body {
       min-height: 100vh;
-      background: var(--black);
-      font-family: 'Inter', sans-serif;
+      font-family: 'Special Elite', 'Courier New', monospace;
       -webkit-font-smoothing: antialiased;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: stretch;
-      overflow-x: hidden;
     }
 
-    /* ── Ember blobs ──────────────────────────────── */
+    a { color: inherit; -webkit-tap-highlight-color: transparent; }
 
-    .blobs {
+    /* Film grain overlay */
+    .grain::before {
+      content: '';
       position: fixed;
       inset: 0;
-      pointer-events: none;
-      z-index: 0;
-      overflow: hidden;
-    }
-
-    .blob {
-      position: absolute;
-      border-radius: 50%;
-      background: var(--burgundy);
-      filter: blur(90px);
-    }
-
-    .b1 {
-      width: 60vw; height: 60vw;
-      top: -14%; left: -20%;
-      opacity: 0.18;
-      animation: drift1 28s ease-in-out infinite;
-    }
-    .b2 {
-      width: 52vw; height: 52vw;
-      bottom: -20%; right: -16%;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
       opacity: 0.14;
-      animation: drift2 38s ease-in-out infinite;
-    }
-    .b3 {
-      width: 40vw; height: 40vw;
-      top: 28%; left: 50%;
-      opacity: 0.10;
-      animation: drift3 22s ease-in-out infinite;
+      mix-blend-mode: overlay;
+      pointer-events: none;
+      z-index: 999;
     }
 
-    @keyframes drift1 {
-      0%, 100% { transform: translate(0, 0); }
-      35%       { transform: translate(14vw, 10vh); }
-      70%       { transform: translate(4vw, 18vh); }
-    }
-    @keyframes drift2 {
-      0%, 100% { transform: translate(0, 0); }
-      40%       { transform: translate(-14vw, -12vh); }
-      75%       { transform: translate(-6vw, 8vh); }
-    }
-    @keyframes drift3 {
-      0%, 100% { transform: translate(0, 0); }
-      50%       { transform: translate(-16vw, -14vh); }
+    /* Keyframes */
+    @keyframes pp-float {
+      0%, 100% { transform: rotate(-6deg) translateY(0); }
+      50% { transform: rotate(-5.4deg) translateY(-6px); }
     }
 
-    /* ── Main (receives mouse parallax) ──────────── */
+    /* Reduced motion */
+    @media (prefers-reduced-motion: reduce) {
+      .grain::before { display: none; }
+    }
 
-    main {
-      position: relative;
-      z-index: 1;
+    /* Page container */
+    .page {
+      height: 100vh;
+      height: 100dvh;
       width: 100%;
-      will-change: transform;
-      transition: transform 0.12s ease-out;
-    }
-
-    /* ── Nameplate — slowly sways, never settles ── */
-
-    .nameplate {
-      width: 106vw;
-      margin-left: -3vw;
       background: var(--burgundy);
-      padding: 1.6rem 4vw;
-      transform-origin: center center;
-      animation: stripe-sway 18s ease-in-out infinite;
-      margin-bottom: 4rem;
-    }
-
-    @keyframes stripe-sway {
-      0%         { transform: rotate(-1.2deg); }
-      28%        { transform: rotate(-2.6deg); }
-      58%        { transform: rotate(-0.2deg); }
-      80%        { transform: rotate(-1.9deg); }
-      100%       { transform: rotate(-1.2deg); }
-    }
-
-    h1 {
-      font-family: 'Bungee', Impact, 'Arial Black', sans-serif;
-      font-size: clamp(2.8rem, 10vw, 6.5rem);
-      font-weight: 400;
       color: var(--white);
-      text-align: center;
-      letter-spacing: 0.06em;
-      line-height: 1;
-      text-transform: uppercase;
-    }
-
-    .name-char {
-      display: inline-block;
-    }
-
-    /* ── Content ──────────────────────────────────── */
-
-    .content {
-      max-width: 500px;
-      margin: 0 auto;
-      padding: 0 2rem;
-      text-align: center;
-    }
-
-    .bio {
-      font-weight: 500;
-      font-size: clamp(1.15rem, 3vw, 1.3rem);
-      color: rgba(242, 242, 240, 0.88);
-      line-height: 1.8;
-      letter-spacing: 0.01em;
-      margin-bottom: 3rem;
-    }
-
-    /* ── Links ────────────────────────────────────── */
-
-    nav {
+      position: relative;
+      overflow: hidden;
       display: flex;
-      justify-content: center;
-      gap: 2.4rem;
-      flex-wrap: wrap;
+      flex-direction: column;
     }
 
-    nav a {
-      color: var(--brand, var(--white));
-      text-decoration: none;
-      font-size: 0.95rem;
-      font-weight: 700;
-      letter-spacing: 0.20em;
+    /* Black wedge */
+    .wedge {
+      position: absolute;
+      inset: 0;
+      background: var(--black);
+      clip-path: polygon(0 0, 100% 0, 100% 26%, 0 42%);
+      z-index: 1;
+    }
+
+    /* Meta strip */
+    .meta {
+      position: relative;
+      z-index: 5;
+      display: flex;
+      justify-content: space-between;
+      padding: 20px 40px 0;
+      font-family: 'Special Elite', monospace;
+      font-size: 14px;
+      letter-spacing: 0.22em;
       text-transform: uppercase;
-      opacity: 0.72;
-      transition: opacity 0.22s ease;
+    }
+    .meta-right { opacity: 0.75; }
+    .meta .numeral {
+      font-family: 'Rubik Mono One', 'Stardos Stencil', sans-serif;
     }
 
-    nav a:hover {
-      opacity: 1;
+    /* Name container */
+    .name-block {
+      position: relative;
+      z-index: 4;
+      padding: 40px 40px 0;
+      line-height: 0.82;
+      letter-spacing: -0.045em;
+      font-family: 'Rubik Mono One', 'Stardos Stencil', sans-serif;
     }
 
-    nav a:focus-visible {
-      outline: 1px solid var(--burgundy);
-      outline-offset: 4px;
-      border-radius: 2px;
+    /* Ghost behind name */
+    .name-ghost {
+      position: absolute;
+      left: 46px;
+      top: 44px;
+      color: var(--burgundy);
+      opacity: 0.55;
+      pointer-events: none;
+      line-height: 0.82;
+      letter-spacing: -0.045em;
+      text-shadow: 2px 0 0 rgba(0,0,0,0.25);
+    }
+    .name-ghost-line2 {
+      margin-top: -12px;
+      padding-left: 40px;
     }
 
+    /* Name lines */
+    .name-line {
+      color: var(--white);
+      position: relative;
+      display: flex;
+    }
+    .name-line-2 {
+      margin-top: -12px;
+      padding-left: 40px;
+    }
+
+    /* Glitch letter cell */
+    .glitch-cell {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      vertical-align: middle;
+    }
+
+    /* Giant ½ */
+    .half-deco {
+      position: absolute;
+      right: -20px;
+      top: 110px;
+      font-size: 520px;
+      line-height: 0.8;
+      color: transparent;
+      -webkit-text-stroke: 5px rgba(255,255,255,0.45);
+      font-family: 'Rubik Mono One', sans-serif;
+      animation: pp-float 7s ease-in-out infinite;
+      pointer-events: none;
+      z-index: 2;
+    }
+
+    /* Copy block */
+    .copy-block {
+      position: relative;
+      z-index: 6;
+      padding: 56px 40px 0;
+      max-width: 640px;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 6px;
+      flex: 1;
+      min-height: 0;
+      justify-content: center;
+    }
+    .copy-chip {
+      display: inline-block;
+      font-family: 'Special Elite', monospace;
+      font-size: 22px;
+      font-weight: 400;
+      line-height: 1.35;
+      padding: 4px 12px;
+    }
+    .copy-chip-light {
+      background: var(--white);
+      color: var(--burgundy);
+    }
+    .copy-chip-dark {
+      background: var(--burgundy);
+      color: var(--white);
+      border: 1px solid rgba(255,255,255,0.4);
+    }
+    .copy-extra {
+      margin-top: 8px;
+      display: inline-block;
+      background: var(--black);
+      color: var(--white);
+      padding: 6px 14px;
+      font-family: 'Special Elite', monospace;
+      font-style: italic;
+      font-size: 20px;
+    }
+
+    /* SIDE B badge */
+    .side-b {
+      position: absolute;
+      right: 48px;
+      bottom: 220px;
+      border: 2px solid var(--white);
+      background: var(--burgundy);
+      color: var(--white);
+      padding: 10px 16px;
+      font-family: 'Rubik Mono One', sans-serif;
+      font-size: 15px;
+      letter-spacing: 0.2em;
+      transform: rotate(3deg);
+      z-index: 7;
+      box-shadow: 4px 4px 0 rgba(0,0,0,0.35);
+    }
+
+    /* Ticket links */
+    .links {
+      position: relative;
+      z-index: 6;
+      padding: 48px 40px 40px;
+      display: flex;
+      flex-direction: row;
+      gap: 12px;
+    }
+    .ticket {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--white);
+      color: var(--black);
+      padding: 16px 22px;
+      font-family: 'Special Elite', monospace;
+      font-size: 14px;
+      font-weight: 400;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      text-decoration: none;
+      clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 50%, calc(100% - 14px) 100%, 0 100%, 14px 50%);
+      border: 2px solid var(--black);
+      transition: background 80ms, color 80ms;
+      min-width: 0;
+      overflow: hidden;
+      line-height: 1.2;
+    }
+    .ticket:hover {
+      background: var(--burgundy);
+      color: var(--white);
+      border-color: var(--white);
+    }
+    .ticket-num {
+      font-size: 11px;
+      opacity: 0.55;
+      flex-shrink: 0;
+      font-family: 'Rubik Mono One', sans-serif;
+    }
+    .ticket-label {
+      flex: 1;
+      min-width: 0;
+      font-weight: 700;
+      word-break: break-word;
+    }
+    .ticket-icon {
+      display: flex;
+      align-items: center;
+      flex-shrink: 0;
+      opacity: 0.75;
+    }
+    .ticket-icon svg {
+      width: 18px;
+      height: 18px;
+      display: block;
+    }
+
+    /* Footer */
+    .footer {
+      position: relative;
+      z-index: 5;
+      padding: 0 40px 24px;
+      font-family: 'Special Elite', monospace;
+      font-size: 12px;
+      letter-spacing: 0.2em;
+      color: rgba(255,255,255,0.55);
+      display: flex;
+      justify-content: space-between;
+      text-transform: uppercase;
+    }
+
+    /* ── Mobile ──────────────────────────── */
+    @media (max-width: 719px) {
+      .wedge {
+        clip-path: polygon(0 0, 100% 0, 100% 22%, 0 32%);
+      }
+      .meta {
+        padding: 14px 16px 0;
+        font-size: 11px;
+      }
+      .name-block {
+        padding: 24px 14px 0;
+      }
+      .name-ghost {
+        left: 18px;
+        top: 28px;
+      }
+      .name-ghost-line2 {
+        margin-top: -4px;
+        padding-left: 12px;
+      }
+      .name-line-2 {
+        margin-top: -4px;
+        padding-left: 12px;
+      }
+      .half-deco {
+        right: -40px;
+        top: auto;
+        bottom: 360px;
+        font-size: 260px;
+        -webkit-text-stroke-width: 3px;
+      }
+      .copy-block {
+        padding: 28px 16px 0;
+      }
+      .copy-chip {
+        font-size: 14px;
+        padding: 3px 9px;
+      }
+      .copy-extra {
+        padding: 4px 10px;
+        font-size: 13px;
+      }
+      .side-b {
+        right: 16px;
+        bottom: auto;
+        top: 300px;
+        padding: 6px 10px;
+        font-size: 11px;
+      }
+      .links {
+        flex-direction: column;
+        padding: 32px 16px 28px;
+        gap: 8px;
+      }
+      .ticket {
+        padding: 12px 22px;
+        gap: 8px;
+      }
+      .ticket-num { font-size: 10px; }
+      .ticket-icon svg { width: 16px; height: 16px; }
+      .footer {
+        padding: 0 16px 20px;
+        font-size: 10px;
+      }
+    }
   </style>
 </head>
-<body>
+<body class="grain">
+  <div class="page">
+    <!-- Black wedge -->
+    <div class="wedge" aria-hidden="true"></div>
 
-  <div class="blobs" aria-hidden="true">
-    <div class="blob b1"></div>
-    <div class="blob b2"></div>
-    <div class="blob b3"></div>
+    <!-- Meta strip -->
+    <div class="meta">
+      <span><span class="numeral">№</span> 00</span>
+      <span class="meta-right">Est. ∞</span>
+    </div>
+
+    <!-- Giant name -->
+    <div class="name-block">
+      <div class="name-ghost" aria-hidden="true">
+        <div id="ghost-line1">PEDRO</div>
+        <div id="ghost-line2" class="name-ghost-line2">PAZZO</div>
+      </div>
+      <div class="name-line" id="name-line-1"></div>
+      <div class="name-line name-line-2" id="name-line-2"></div>
+    </div>
+
+    <!-- Giant ½ (off by default) -->
+    <div class="half-deco" id="half-deco" aria-hidden="true" style="display:none">½</div>
+
+    <!-- Copy -->
+    <div class="copy-block">
+      <div class="copy-chip copy-chip-light">Pedro records music somewhere in Finland.</div>
+      <div class="copy-chip copy-chip-dark">He is making it up as he goes.</div>
+      <div class="copy-chip copy-chip-light">He thinks that is probably enough.</div>
+      <div class="copy-extra" id="extra-line"></div>
+    </div>
+
+    <!-- SIDE B badge -->
+    <div class="side-b" id="side-b">★ SIDE B ★</div>
+
+    <!-- Ticket links -->
+    <div class="links">
+      <a class="ticket" href="#" data-idx="0">
+        <span class="ticket-num">№01</span>
+        <span class="ticket-label">Il Spottifino</span>
+        <span class="ticket-icon">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M6.5 9.5c4-1.2 8-1 11.5.8" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M7 13c3.2-.9 6.5-.7 9.5.8" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M7.5 16.2c2.5-.7 5.2-.5 7.5.8" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+        </span>
+      </a>
+      <a class="ticket" href="#" data-idx="1">
+        <span class="ticket-num">№02</span>
+        <span class="ticket-label">El Campo</span>
+        <span class="ticket-icon">
+          <svg viewBox="0 0 24 24"><path d="M3 18 L9 6 L21 6 L15 18 Z" fill="currentColor"/></svg>
+        </span>
+      </a>
+      <a class="ticket" href="#" data-idx="2">
+        <span class="ticket-num">№03</span>
+        <span class="ticket-label">Appel</span>
+        <span class="ticket-icon">
+          <svg viewBox="0 0 24 24"><path d="M16.5 12.5c0-2.4 2-3.5 2.1-3.6-1.1-1.6-2.9-1.9-3.5-1.9-1.5-.2-2.9.9-3.7.9-.8 0-1.9-.9-3.2-.8-1.6 0-3.2.9-4 2.4-1.7 3-.4 7.4 1.2 9.8.8 1.2 1.8 2.5 3 2.5 1.2 0 1.7-.8 3.2-.8 1.5 0 1.9.8 3.2.8 1.3 0 2.2-1.2 3-2.4.9-1.4 1.3-2.7 1.4-2.8-.1 0-2.7-1-2.7-4.1z" fill="currentColor"/><path d="M14.5 4.6c.7-.8 1.1-2 1-3.1-1 .1-2.2.7-2.9 1.5-.6.7-1.2 1.9-1 3 1.1.1 2.2-.6 2.9-1.4z" fill="currentColor"/></svg>
+        </span>
+      </a>
+      <a class="ticket" href="#" data-idx="3">
+        <span class="ticket-num">№04</span>
+        <span class="ticket-label">Socialist Media de Instagrammo</span>
+        <span class="ticket-icon">
+          <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="5" fill="none" stroke="currentColor" stroke-width="1.7"/><circle cx="12" cy="12" r="4" fill="none" stroke="currentColor" stroke-width="1.7"/><circle cx="17.5" cy="6.5" r="1.1" fill="currentColor"/></svg>
+        </span>
+      </a>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+      <span>Mezzo / Tutti</span>
+      <span>© PP</span>
+    </div>
   </div>
 
-  <main id="main">
-    <div class="nameplate">
-      <h1 id="name">Pedro Pazzo</h1>
-    </div>
-
-    <div class="content">
-      <p class="bio">
-        Pedro records music somewhere in Finland.<br>
-        He is making it up as he goes.<br>
-        He thinks that is probably enough.
-      </p>
-
-      <nav aria-label="Music platforms">
-        <a href="#" rel="noopener noreferrer" style="--brand:#1DB954">Il Spottifino</a>
-        <a href="#" rel="noopener noreferrer" style="--brand:#1DA0C3">El Campo</a>
-        <a href="#" rel="noopener noreferrer" style="--brand:#FC3C44">Appel</a>
-        <a href="#" rel="noopener noreferrer" style="--brand:#E1306C">Social Media de Instagrammo</a>
-      </nav>
-    </div>
-  </main>
-
   <script>
-    // ── Mouse parallax (desktop only) ────────────────
-    (function () {
-      if (!window.matchMedia('(hover: hover)').matches) return;
-      var main = document.getElementById('main');
-      document.addEventListener('mousemove', function (e) {
-        var cx = window.innerWidth  / 2;
-        var cy = window.innerHeight / 2;
-        var dx = (e.clientX - cx) / cx;
-        var dy = (e.clientY - cy) / cy;
-        main.style.transform =
-          'perspective(1000px) rotateX(' + (dy * -1.2) + 'deg) rotateY(' + (dx * 1.2) + 'deg)';
-      });
-      document.addEventListener('mouseleave', function () {
-        main.style.transform = 'perspective(1000px) rotateX(0deg) rotateY(0deg)';
-      });
-    }());
+    // ── Config ─────────────────────────────────────────
+    var TWEAKS = {
+      jitterAmount: 0.6,
+      showSideB: true,
+      showHalf: false,
+      numeral: '00',
+      extraLine: '1st single "For a Moment" out soon '
+    };
 
-    // ── Wrap h1 chars for glitch targeting ───────────
-    (function () {
-      var h1 = document.getElementById('name');
-      h1.innerHTML = h1.textContent.split('').map(function (c) {
-        if (c === ' ') return '<span style="display:inline-block;width:0.3em"> </span>';
-        return '<span class="name-char">' + c + '</span>';
-      }).join('');
-    }());
+    // ── Apply tweaks to DOM ───────────────────────────
+    (function applyTweaks() {
+      var extra = document.getElementById('extra-line');
+      if (TWEAKS.extraLine) {
+        extra.textContent = '\u00ab ' + TWEAKS.extraLine + ' \u00bb';
+        extra.style.display = 'inline-block';
+      } else {
+        extra.style.display = 'none';
+      }
+      document.getElementById('side-b').style.display = TWEAKS.showSideB ? '' : 'none';
+      document.getElementById('half-deco').style.display = TWEAKS.showHalf ? '' : 'none';
+    })();
 
-    // ── VHS letter glitch ─────────────────────────────
-    // Every 30–60s, one letter briefly flickers and swaps — like a tracking error.
-    (function () {
-      var CHARS = 'BDFGHJKLMNQRSTVWXYZ023456789#%?';
+    // ── Responsive name sizing ────────────────────────
+    var nameFs = 100;
+    var isMobile = false;
 
-      function glitch () {
-        var chars = document.querySelectorAll('.name-char');
-        var el    = chars[Math.floor(Math.random() * chars.length)];
-        var orig  = el.textContent;
+    function computeNameSize() {
+      var vw = window.innerWidth;
+      var vh = window.innerHeight;
+      isMobile = vw < 720;
+      var safeW = Math.min(vw - (isMobile ? 28 : 80), 1400);
+      var byWidth = Math.floor(safeW / 5 / 0.92);
+      // Cap so two name lines (~1.64 * fontSize at 0.82 line-height) don't exceed ~50% of viewport height
+      var byHeight = Math.floor(vh * 0.50 / 1.64);
+      nameFs = Math.min(byWidth, byHeight);
+    }
 
-        // First flicker
-        el.textContent  = CHARS[Math.floor(Math.random() * CHARS.length)];
-        el.style.cssText = 'display:inline-block;color:#C0405A;text-shadow:2px 0 rgba(0,200,255,0.7),-2px 0 rgba(255,0,100,0.7);transform:translateY(-2px) scaleX(1.08)';
+    computeNameSize();
+    window.addEventListener('resize', function() {
+      var prevFs = nameFs;
+      computeNameSize();
+      if (prevFs !== nameFs) renderNameLetters();
+    });
 
-        setTimeout(function () {
-          // Second flicker (different char)
-          el.textContent = CHARS[Math.floor(Math.random() * CHARS.length)];
-          setTimeout(function () {
-            // Snap back
-            el.textContent  = orig;
-            el.style.cssText = 'display:inline-block';
-          }, 55);
-        }, 70);
+    // ── Glitch system ─────────────────────────────────
+    var GLITCH_CHARS = 'A X ? \u00b6 \u00a7 # % & $ @ * \u25fc \u25fb \u2593 \u2591 \u2592 \u221e \u00bd \u042f \u0416 \u00d8 \u00c6 \u00df \u2726 ! \u00bf'.split(' ');
+    var GLITCH_WORDS = ['pazzo','pedro','mezzo','tutti','s\u00ec','no','ok','ciao','404','loading','err'];
+    var GLITCH_COLORS = ['#ffcc00','#00e5ff','#ff3366','#5dff4a','#ff8c00','#c33cff','#000000'];
+    var GLITCH_SVG = {
+      heart: '<svg viewBox="0 0 24 24" style="width:70%;height:80%;display:block"><path fill="currentColor" d="M12 21s-7-4.5-9.5-9A5 5 0 0 1 12 6a5 5 0 0 1 9.5 6c-2.5 4.5-9.5 9-9.5 9z"/></svg>',
+      eye: '<svg viewBox="0 0 24 24" style="width:70%;height:80%;display:block"><path fill="currentColor" d="M12 5C5 5 1 12 1 12s4 7 11 7 11-7 11-7-4-7-11-7zm0 11a4 4 0 110-8 4 4 0 010 8z"/><circle cx="12" cy="12" r="2" fill="var(--burgundy)"/></svg>',
+      star: '<svg viewBox="0 0 24 24" style="width:70%;height:80%;display:block"><path fill="currentColor" d="M12 2l3 7 7 .5-5.5 4.5 2 7L12 17l-6.5 4 2-7L2 9.5l7-.5z"/></svg>',
+      bars: '<svg viewBox="0 0 24 24" style="width:70%;height:80%;display:block"><rect x="2" y="10" width="3" height="12" fill="currentColor"/><rect x="7" y="6" width="3" height="16" fill="currentColor"/><rect x="12" y="2" width="3" height="20" fill="currentColor"/><rect x="17" y="8" width="3" height="14" fill="currentColor"/></svg>'
+    };
+    var GLITCH_SVG_KEYS = Object.keys(GLITCH_SVG);
 
-        setTimeout(glitch, 28000 + Math.random() * 32000);
+    function makePixelBlock(size) {
+      var cols = 5, rows = 7;
+      var rects = '';
+      for (var r = 0; r < rows; r++) {
+        for (var c = 0; c < cols; c++) {
+          if (Math.random() > 0.5) rects += '<rect x="'+c+'" y="'+r+'" width="1" height="1" fill="currentColor"/>';
+        }
+      }
+      return '<svg viewBox="0 0 5 7" style="width:'+Math.round(size*0.6)+'px;height:'+Math.round(size*0.8)+'px;display:block">'+rects+'</svg>';
+    }
+
+    // Letter state
+    var letters = [];
+
+    function createLetterEl(ch, seed, container) {
+      var el = document.createElement('span');
+      el.className = 'glitch-cell';
+      el.dataset.char = ch;
+      el.dataset.seed = seed;
+      el.textContent = ch;
+      container.appendChild(el);
+
+      var state = { el: el, ch: ch, seed: seed, timeout: null, glitching: false };
+      letters.push(state);
+      scheduleGlitch(state);
+      return state;
+    }
+
+    function scheduleGlitch(state) {
+      if (reducedMotion) return;
+      var wait = 40000 + Math.random() * 110000;
+      state.timeout = setTimeout(function() { triggerGlitch(state); }, wait);
+    }
+
+    function triggerGlitch(state) {
+      var size = nameFs;
+      var color = Math.random() < 0.5 ? 'var(--white)' : GLITCH_COLORS[Math.floor(Math.random() * 7)];
+
+      // Pick glitch type: chars (26), words (11), pixel (2 weight), svg (4) = 43 total
+      var roll = Math.floor(Math.random() * 43);
+      var html;
+
+      if (roll < 26) {
+        // Character
+        html = '<span style="color:'+color+';font-family:\'Rubik Mono One\',sans-serif">' + GLITCH_CHARS[Math.floor(Math.random() * GLITCH_CHARS.length)] + '</span>';
+      } else if (roll < 37) {
+        // Word
+        var word = GLITCH_WORDS[Math.floor(Math.random() * GLITCH_WORDS.length)];
+        html = '<span style="color:'+color+';font-family:\'Special Elite\',monospace;font-size:'+Math.round(size*0.22)+'px;text-transform:lowercase;letter-spacing:0.05em;line-height:1">' + word + '</span>';
+      } else if (roll < 39) {
+        // Pixel block
+        html = '<span style="color:'+color+'">' + makePixelBlock(size) + '</span>';
+      } else {
+        // SVG glyph
+        var key = GLITCH_SVG_KEYS[Math.floor(Math.random() * GLITCH_SVG_KEYS.length)];
+        html = '<span style="color:'+color+'">' + GLITCH_SVG[key] + '</span>';
       }
 
-      setTimeout(glitch, 22000 + Math.random() * 12000);
-    }());
+      state.el.innerHTML = html;
+      state.glitching = true;
 
-    // ── Tab title has its own opinions ───────────────
+      var dur = 30 + Math.random() * 80;
+      state.timeout = setTimeout(function() {
+        state.el.textContent = state.ch;
+        state.glitching = false;
+        scheduleGlitch(state);
+      }, dur);
+    }
+
+    function renderNameLetters() {
+      var line1 = document.getElementById('name-line-1');
+      var line2 = document.getElementById('name-line-2');
+
+      // Clear timers
+      letters.forEach(function(s) { clearTimeout(s.timeout); });
+      letters = [];
+
+      line1.innerHTML = '';
+      line2.innerHTML = '';
+
+      var cellSize = Math.round(nameFs * 0.82);
+
+      'PEDRO'.split('').forEach(function(c, i) {
+        var s = createLetterEl(c, i * 13 + 7, line1);
+        s.el.style.width = cellSize + 'px';
+        s.el.style.height = cellSize + 'px';
+        s.el.style.fontSize = nameFs + 'px';
+        s.el.style.lineHeight = '0.82';
+      });
+
+      'PAZZO'.split('').forEach(function(c, i) {
+        var s = createLetterEl(c, i * 19 + 31, line2);
+        s.el.style.width = cellSize + 'px';
+        s.el.style.height = cellSize + 'px';
+        s.el.style.fontSize = nameFs + 'px';
+        s.el.style.lineHeight = '0.82';
+      });
+
+      // Ghost sizing
+      var ghost1 = document.getElementById('ghost-line1');
+      var ghost2 = document.getElementById('ghost-line2');
+      ghost1.style.fontSize = nameFs + 'px';
+      ghost2.style.fontSize = nameFs + 'px';
+    }
+
+    renderNameLetters();
+
+    // ── Jitter / wobble via RAF ────────────────────────
+    var reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    function jitter(t, seed, amount) {
+      return Math.sin(t * (2 + seed) + seed * 7.3) * amount;
+    }
+
+    var startTime = performance.now();
+    var line1El = document.getElementById('name-line-1');
+    var line2El = document.getElementById('name-line-2');
+    var ticketEls = document.querySelectorAll('.ticket');
+    var hoveredTicket = -1;
+
+    ticketEls.forEach(function(el) {
+      el.addEventListener('mouseenter', function() {
+        hoveredTicket = parseInt(el.dataset.idx);
+      });
+      el.addEventListener('mouseleave', function() {
+        hoveredTicket = -1;
+      });
+    });
+
+    if (!reducedMotion) {
+      (function loop() {
+        var t = (performance.now() - startTime) / 1000;
+        var amt = TWEAKS.jitterAmount;
+
+        // Name wobble
+        line1El.style.transform = 'translate(' + jitter(t, 1, amt) + 'px,' + jitter(t, 2, amt * 0.6) + 'px)';
+        line2El.style.transform = 'translate(' + jitter(t, 3, amt) + 'px,' + jitter(t, 4, amt * 0.6) + 'px)';
+
+        // Ticket hover wobble
+        ticketEls.forEach(function(el) {
+          var idx = parseInt(el.dataset.idx);
+          if (idx === hoveredTicket) {
+            el.style.transform = 'translateY(' + jitter(t, 20 + idx, 2) + 'px) rotate(' + jitter(t, 40 + idx, 1) + 'deg)';
+          } else {
+            el.style.transform = 'none';
+          }
+        });
+
+        requestAnimationFrame(loop);
+      })();
+    }
+
+    // ── Tab title rotation ────────────────────────────
     (function () {
       var sequence = [
-        ['Pedro Pazzo',   10000],
-        ['a website',      4000],
-        ['Pedro Pazzo',   13000],
-        ['probably fine',  4000],
-        ['Pedro Pazzo',    9000],
-        ['(music)',         4000],
-        ['Pedro Pazzo',   11000],
-        ['he made this',   4000],
+        ['Pedro Pazzo',    10000],
+        ['a website',       4000],
+        ['Pedro Pazzo',    13000],
+        ['probably fine',   4000],
+        ['Pedro Pazzo',     9000],
+        ['(music)',          4000],
+        ['Pedro Pazzo',    11000],
+        ['he made this',    4000],
       ];
       var i = 0;
-      function next () {
+      function next() {
         var step = sequence[i % sequence.length];
         document.title = step[0];
         i++;
         setTimeout(next, step[1]);
       }
       setTimeout(next, 16000);
-    }());
+    })();
   </script>
-
 </body>
 </html>
