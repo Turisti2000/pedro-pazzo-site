@@ -1,0 +1,8 @@
+# Run `pre-commit install` once after cloning to activate these hooks.
+# Install pre-commit itself with: brew install pre-commit  (or pipx install pre-commit)
+# See https://pre-commit.com
+repos:
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.30.1
+    hooks:
+      - id: gitleaks
