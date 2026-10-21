@@ -527,6 +527,18 @@
     }
 
     .ppg-actions { padding-bottom: 6px; }
+    .ppg-status { font-size: 12px; letter-spacing: 0.15em; text-transform: uppercase; opacity: 0.75; }
+    .ppg-copy {
+      display: block;
+      width: calc(100% - 12px);
+      margin: 0 0 8px;
+      padding: 6px 8px;
+      border: 0;
+      resize: none;
+      background: #f2eee3;
+      color: var(--black);
+      font: 14px/1.35 'Special Elite', 'Courier New', monospace;
+    }
 
     /* Search mode: invisible tap targets laid over the hiding spots */
     .ppg-layer { position: absolute; left: 0; top: 0; z-index: 900; }
@@ -1088,6 +1100,19 @@
       { from: 15, tries: 4, decoys: 3, hints: 'vague',   every: 2 },
     ];
 
+    // Daily puzzle: the same for everyone on a date. Always 5 tries; the weekday sets the rest.
+    const DAILY_TRIES = 5;
+    const DAILY_BY_WEEKDAY = [ // index = Date#getDay(), 0 = Sunday
+      { decoys: 3, hints: 'vague',   every: 2 }, // Sun
+      { decoys: 0, hints: 'precise', every: 1 }, // Mon
+      { decoys: 0, hints: 'precise', every: 1 }, // Tue
+      { decoys: 1, hints: 'precise', every: 1 }, // Wed
+      { decoys: 1, hints: 'precise', every: 1 }, // Thu
+      { decoys: 2, hints: 'precise', every: 2 }, // Fri
+      { decoys: 2, hints: 'precise', every: 2 }, // Sat
+    ];
+    const SHARE_EMOJI = true; // adds a 🟥🟥🟩 row to the share text
+
     // Hint bands, as a share of the viewport diagonal.
     const HOT = 0.15, WARM = 0.35, SAME = 0.03;
 
@@ -1244,9 +1269,17 @@
     row.append(lineEl, triesEl, closeBtn);
     const actions = make('div', 'ppg-row ppg-actions');
     actions.hidden = true;
+    const shareBtn = button('ppg-btn', TEXT.share, () => share());
     const againBtn = button('ppg-btn', TEXT.again, () => startRound());
-    actions.append(againBtn);
-    bar.append(row, actions);
+    const statusEl = make('span', 'ppg-status');
+    statusEl.setAttribute('role', 'status');
+    actions.append(shareBtn, againBtn, statusEl);
+    const copyBox = make('textarea', 'ppg-copy'); // last-resort manual copy
+    copyBox.readOnly = true;
+    copyBox.rows = 4;
+    copyBox.hidden = true;
+    copyBox.setAttribute('aria-label', TEXT.copyHint);
+    bar.append(row, actions, copyBox);
 
     const live = make('div', 'ppg-sr');
     live.setAttribute('aria-live', 'polite');
@@ -1278,6 +1311,12 @@
       document.addEventListener('keydown', onKey);
     }
     function closeBar() {
+      // Walking away from a started daily counts as not found, so it can't be re-rolled.
+      if (round && !round.over && round.daily && round.used) {
+        finish(false);
+        state.failed++;
+        saveState();
+      }
       clearRound();
       clearInterval(typing);
       bar.hidden = true;
@@ -1433,25 +1472,33 @@
     }
 
     // ── Rounds ────────────────────────────────────────
-    let round = null;
+    let round = null, saidDailyDone = false;
 
     const levelFor = finds => ENDLESS_LEVELS.reduce((cur, l) => finds >= l.from ? l : cur, ENDLESS_LEVELS[0]);
 
+    // Today's daily if it hasn't been played, otherwise an endless round.
     function startRound() {
       clearRound();
-      const cfg = levelFor(state.finds);
-      const pick = pickSpots(Math.floor(Math.random() * 4294967296), cfg.decoys);
+      const now = new Date(), today = dateKey(now);
+      const daily = state.lastDailyDate !== today;
+      const cfg = daily ? Object.assign({ tries: DAILY_TRIES }, DAILY_BY_WEEKDAY[now.getDay()]) : levelFor(state.finds);
+      const seed = daily ? strHash(today + '|v' + SPOTS_VERSION) : Math.floor(Math.random() * 4294967296);
+      const pick = pickSpots(seed, cfg.decoys);
       if (!pick.hide) return;
       round = {
-        cfg: cfg, tries: cfg.tries, used: 0, misses: 0, lastD: null, tried: {}, marks: '', over: false,
+        daily: daily, today: today, cfg: cfg, tries: cfg.tries, used: 0, misses: 0, lastD: null, tried: {}, marks: '', over: false,
         spots: pick.all, hide: pick.hide, decoys: pick.decoys.map(s => s.id),
       };
       showBar();
       actions.hidden = true;
+      copyBox.hidden = true;
       bar.classList.remove('ppg-bar-low');
       updateTries();
       enterSearch();
-      say(state.rounds || state.finds ? pickLine('start') : PEDRO_LINES.start[0]);
+      let first = pickLine('start');
+      if (!state.rounds && !state.finds) first = PEDRO_LINES.start[0];
+      else if (!daily && !saidDailyDone) { first = pickLine('daily_done'); saidDailyDone = true; }
+      say(first);
       if (layer.firstChild) layer.firstChild.focus();
     }
 
@@ -1504,9 +1551,12 @@
       round.over = true;
       round.found = found;
       state.rounds++;
+      if (round.daily) recordDaily(found);
       exitSearch();
       updateTries();
       actions.hidden = false;
+      shareBtn.hidden = !round.daily;
+      statusEl.textContent = '';
       // The taller end-of-round bar moves to the bottom if it would cover the glasses.
       const b = spotBox(round.hide);
       bar.classList.toggle('ppg-bar-low', !!b && b.y - scrollY < innerHeight * 0.45);
@@ -1540,10 +1590,55 @@
 
     function onFlyer() { startRound(); }
 
+    // ── Daily: dates, streak, share ───────────────────
+    const dateKey = d => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+    const dayBefore = key => { const p = key.split('-'); return dateKey(new Date(+p[0], p[1] - 1, p[2] - 1)); };
+
+    function recordDaily(found) {
+      const r = state.lastDailyResult;
+      state.streak = !found ? 0 : state.lastDailyDate === dayBefore(round.today) && r && r.found ? state.streak + 1 : 1;
+      state.bestStreak = Math.max(state.bestStreak, state.streak);
+      state.lastDailyDate = round.today;
+      state.lastDailyResult = { found: found, used: round.used, max: round.cfg.tries };
+    }
+
+    // A day without a daily breaks the streak.
+    function checkStreak() {
+      const today = dateKey(new Date());
+      if (state.streak && state.lastDailyDate !== today && state.lastDailyDate !== dayBefore(today)) {
+        state.streak = 0;
+        saveState();
+      }
+    }
+
+    function shareText() {
+      const head = TEXT.shareTitle + ' ' + round.today;
+      const result = fmt(round.found ? TEXT.shareFound : TEXT.shareFailed, { used: round.used, max: round.cfg.tries });
+      return [head, result].concat(SHARE_EMOJI ? [round.marks] : [], TEXT.shareUrl).join('\n');
+    }
+
+    // navigator.share, then the clipboard, then a box with the text selected for copying by hand.
+    function share() {
+      const text = shareText();
+      const manual = () => {
+        copyBox.value = text;
+        copyBox.hidden = false;
+        copyBox.focus();
+        copyBox.setSelectionRange(0, text.length);
+      };
+      const copy = () => {
+        try { navigator.clipboard.writeText(text).then(() => { statusEl.textContent = TEXT.copied; }, manual); }
+        catch (e) { manual(); }
+      };
+      try {
+        if (!navigator.share) return copy();
+        navigator.share({ text: text }).catch(e => { if (!e || e.name !== 'AbortError') copy(); });
+      } catch (e) { copy(); }
+    }
+
     // ── Titles and stats ──────────────────────────────
     const titleFor = n => TITLES.reduce((cur, t) => n >= t.at ? t : cur, null);
     const nextTitle = n => TITLES.filter(t => t.at > n)[0] || null;
-    const dateKey = d => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
 
     function todayStatus() {
       const r = state.lastDailyResult;
@@ -1554,6 +1649,7 @@
     let modal = null;
     function openStats() {
       if (modal) return;
+      checkStreak();
       modal = make('div', 'ppg-backdrop');
       const box = make('div', 'ppg-stub');
       box.setAttribute('role', 'dialog');
@@ -1686,6 +1782,7 @@
       });
     }
 
+    checkStreak();
     updateCounter();
     placeFlyer();
     window.addEventListener('resize', onResize);
