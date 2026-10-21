@@ -710,6 +710,9 @@
   (function () {
     'use strict';
 
+    // ── Switches ──────────────────────────────────────
+    const GAME_ENABLED = true;
+
     // ── Hiding spots ──────────────────────────────────
     // Stable ids. Append only. Missing elements are skipped at runtime.
     // `each` registers every match as `<id>-1`, `<id>-2`, … in page order.
@@ -732,6 +735,42 @@
       { id: 'insta',   selector: '.insta-anchor', label: 'Instagram link' },
       { id: 'footer',  selector: '.footer', label: 'footer' },
     ];
+
+    // ── Kill switch: nothing below runs, no UI, no listeners ──
+    if (!GAME_ENABLED || new URLSearchParams(location.search).has('nogame')) return;
+
+    // ── State: localStorage when allowed, memory otherwise ──
+    const STORE_KEY = 'pedroGame.v1';
+    const DEFAULTS = { v: 1, finds: 0, streak: 0, bestStreak: 0, lastDailyDate: null, lastDailyResult: null, lastTitleAt: 0, rounds: 0, failed: 0 };
+    const COUNTS = ['finds', 'streak', 'bestStreak', 'lastTitleAt', 'rounds', 'failed'];
+
+    const isCount = n => Number.isInteger(n) && n >= 0;
+
+    function validState(o) {
+      if (!o || typeof o !== 'object' || o.v !== 1) return false;
+      if (!COUNTS.every(k => isCount(o[k]))) return false;
+      if (o.lastDailyDate !== null && !(typeof o.lastDailyDate === 'string' && /^\d{4}-\d\d-\d\d$/.test(o.lastDailyDate))) return false;
+      const r = o.lastDailyResult;
+      return r === null || (!!r && typeof r === 'object' && typeof r.found === 'boolean' && isCount(r.used) && isCount(r.max));
+    }
+
+    function loadState() {
+      try {
+        const o = JSON.parse(localStorage.getItem(STORE_KEY));
+        if (validState(o)) {
+          const s = {};
+          Object.keys(DEFAULTS).forEach(k => { s[k] = o[k]; });
+          return s;
+        }
+      } catch (e) { /* blocked or corrupt: fall through to defaults */ }
+      return Object.assign({}, DEFAULTS);
+    }
+
+    function saveState() {
+      try { localStorage.setItem(STORE_KEY, JSON.stringify(state)); } catch (e) { /* memory only */ }
+    }
+
+    let state = loadState();
   })();
   /* ===== END FIND PEDRO'S SUNGLASSES ===== */
   </script>
