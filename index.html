@@ -1231,12 +1231,13 @@
     }
 
     // ── Glasses ───────────────────────────────────────
-    const GLASSES = '<svg viewBox="0 0 64 26"><defs><linearGradient id="ppg-mirror" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#eef4fb"/><stop offset=".45" stop-color="#8aa6c4"/><stop offset="1" stop-color="#26364d"/></linearGradient></defs><path d="M2 9l6-2M62 9l-6-2M27 11q5-4 10 0" fill="none" stroke="#0a0a0a" stroke-width="2.5" stroke-linecap="round"/><ellipse cx="17" cy="14" rx="10.5" ry="8" fill="url(#ppg-mirror)" stroke="#0a0a0a" stroke-width="3"/><ellipse cx="47" cy="14" rx="10.5" ry="8" fill="url(#ppg-mirror)" stroke="#0a0a0a" stroke-width="3"/><path d="M11 13l5-4M41 13l5-4" stroke="#fff" stroke-width="1.6" stroke-linecap="round"/></svg>';
+    // Pedro's pair: flat black rectangular frame (3D-movie style) with oval mirror lenses.
+    const GLASSES = '<svg viewBox="0 0 64 26"><defs><linearGradient id="ppg-mirror" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#eef4fb"/><stop offset=".45" stop-color="#8aa6c4"/><stop offset="1" stop-color="#26364d"/></linearGradient></defs><path d="M0 5h3v4H0zM61 5h3v4h-3z" fill="#0a0a0a"/><path d="M2 3h60v20H39q-7-9-14 0H2z" fill="#0a0a0a"/><ellipse cx="15" cy="12.5" rx="9.5" ry="6.5" fill="url(#ppg-mirror)"/><ellipse cx="49" cy="12.5" rx="9.5" ry="6.5" fill="url(#ppg-mirror)"/><path d="M10 12l4-3.5M44 12l4-3.5" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/></svg>';
     const DECOYS = [
       // heart-shaped, pink
       '<svg viewBox="0 0 64 26"><path d="M27 10q5-4 10 0" fill="none" stroke="#0a0a0a" stroke-width="2.5"/><path id="ppg-h" d="M16 24C8 18 4 14 4 9.5a6 6 0 0 1 12-1.5 6 6 0 0 1 12 1.5C28 14 24 18 16 24z" fill="#ff3366" stroke="#0a0a0a" stroke-width="2"/><use href="#ppg-h" x="32"/></svg>',
-      // 3D glasses
-      '<svg viewBox="0 0 64 26"><rect x="2" y="5" width="60" height="16" rx="2" fill="#fff" stroke="#0a0a0a" stroke-width="2"/><rect x="7" y="8" width="20" height="10" fill="#ff3366"/><rect x="37" y="8" width="20" height="10" fill="#00e5ff"/></svg>',
+      // round tortoiseshell
+      '<svg viewBox="0 0 64 26"><path d="M24 11q8-5 16 0" fill="none" stroke="#6b3e1f" stroke-width="2.5"/><circle cx="14" cy="13" r="10" fill="#f0b45a" stroke="#6b3e1f" stroke-width="3"/><circle cx="50" cy="13" r="10" fill="#f0b45a" stroke="#6b3e1f" stroke-width="3"/></svg>',
       // stars, yellow
       '<svg viewBox="0 0 64 26"><path d="M27 10q5-4 10 0" fill="none" stroke="#0a0a0a" stroke-width="2.5"/><path id="ppg-s" d="M16 1l3.4 7.6 8.1.6-6.2 5.2 2 7.9L16 18l-7.3 4.3 2-7.9-6.2-5.2 8.1-.6z" fill="#ffcc00" stroke="#0a0a0a" stroke-width="1.8" stroke-linejoin="round"/><use href="#ppg-s" x="32"/></svg>',
     ];
