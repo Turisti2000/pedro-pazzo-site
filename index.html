@@ -481,6 +481,14 @@
       padding: 4px 4px 4px 16px;
       padding-top: max(4px, env(safe-area-inset-top));
     }
+    .ppg-bar-low {
+      top: auto;
+      bottom: 0;
+      border-bottom: 0;
+      border-top: 2px solid var(--white);
+      padding-top: 4px;
+      padding-bottom: max(4px, env(safe-area-inset-bottom));
+    }
     .ppg-bar[hidden], .ppg-bar [hidden] { display: none; }
     .ppg-row { display: flex; align-items: center; gap: 8px; min-height: 44px; }
     .ppg-line { flex: 1; min-width: 0; }
@@ -518,6 +526,86 @@
       white-space: nowrap;
     }
 
+    .ppg-actions { padding-bottom: 6px; }
+
+    /* Search mode: invisible tap targets laid over the hiding spots */
+    .ppg-layer { position: absolute; left: 0; top: 0; z-index: 900; }
+    .ppg-hit {
+      position: absolute;
+      z-index: 1;
+      padding: 0;
+      border: 0;
+      background: transparent;
+      cursor: pointer;
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .ppg-hit-under { z-index: 0; }
+    .ppg-hit:focus-visible { outline: 3px solid #ffcc00; outline-offset: -3px; }
+    .ppg-hit-under:focus-visible { outline: 0; }
+    .ppg-hit-under:focus-visible::after {
+      content: '';
+      position: absolute;
+      left: var(--ax);
+      top: var(--ay);
+      width: 44px;
+      height: 44px;
+      margin: -22px;
+      border: 3px solid #ffcc00;
+      border-radius: 50%;
+    }
+
+    /* Revealed glasses (real and decoys) */
+    .ppg-sprite {
+      position: absolute;
+      z-index: 2;
+      width: 64px;
+      height: 26px;
+      margin: -13px 0 0 -32px;
+      pointer-events: none;
+      animation: ppg-peek 0.5s ease-out;
+      transition: opacity 0.6s;
+    }
+    .ppg-sprite svg {
+      display: block;
+      width: 100%;
+      height: 100%;
+      overflow: visible;
+      filter: drop-shadow(0 0 1px #fff) drop-shadow(1px 2px 0 rgba(0,0,0,0.4));
+    }
+    .ppg-gone { opacity: 0; }
+    .ppg-ring {
+      position: absolute;
+      z-index: 2;
+      width: 40px;
+      height: 40px;
+      margin: -20px;
+      border: 2px solid var(--white);
+      border-radius: 50%;
+      pointer-events: none;
+      animation: ppg-ring 0.6s ease-out forwards;
+    }
+    .ppg-wiggle { animation: ppg-wiggle 0.4s ease-in-out; }
+
+    @keyframes ppg-peek {
+      0% { opacity: 0; transform: translateY(12px) scale(0.4) rotate(-14deg); }
+      60% { opacity: 1; transform: translateY(-4px) scale(1.1) rotate(5deg); }
+    }
+    @keyframes ppg-ring {
+      from { transform: scale(0.4); }
+      to { transform: scale(1.3); opacity: 0; }
+    }
+    /* translate/rotate compose with the transforms the page already sets on these elements */
+    @keyframes ppg-wiggle {
+      20% { translate: -4px 0; rotate: -2deg; }
+      40% { translate: 3px 0; rotate: 2deg; }
+      60% { translate: -2px 0; rotate: -1deg; }
+      80% { translate: 1px 0; rotate: 0.5deg; }
+    }
+    @keyframes ppg-fade-in { from { opacity: 0; } }
+    @keyframes ppg-fade-out { to { opacity: 0; } }
+
+    .ppg-flyer, .ppg-btn { touch-action: manipulation; }
     .ppg-flyer:focus-visible, .ppg-count:focus-visible, .ppg-btn:focus-visible {
       outline: 3px solid #ffcc00;
       outline-offset: 2px;
@@ -529,6 +617,13 @@
       .ppg-flyer-b { font-size: 11px; }
       .ppg-flyer-f { font-size: 10px; }
       .ppg-bar { padding-left: 40px; padding-right: 28px; font-size: 17px; }
+      .ppg-sprite { width: 96px; height: 39px; margin: -20px 0 0 -48px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .ppg-sprite { animation: ppg-fade-in 0.3s; }
+      .ppg-ring { animation: ppg-fade-out 0.6s forwards; }
+      .ppg-wiggle { animation: none; }
     }
 
     /* ===== END FIND PEDRO'S SUNGLASSES ===== */
@@ -915,8 +1010,19 @@
       shareUrl: 'pedropazzo.com',
     };
 
-    // ── Switches ──────────────────────────────────────
+    // ── Switches and difficulty ───────────────────────
     const GAME_ENABLED = true;
+
+    // Endless rounds: difficulty by total finds. `every`: Pedro comments on every Nth miss.
+    const ENDLESS_LEVELS = [
+      { from: 0,  tries: 6, decoys: 0, hints: 'precise', every: 1 },
+      { from: 3,  tries: 5, decoys: 1, hints: 'precise', every: 1 },
+      { from: 7,  tries: 5, decoys: 2, hints: 'precise', every: 2 },
+      { from: 15, tries: 4, decoys: 3, hints: 'vague',   every: 2 },
+    ];
+
+    // Hint bands, as a share of the viewport diagonal.
+    const HOT = 0.15, WARM = 0.35, SAME = 0.03;
 
     // ── Hiding spots ──────────────────────────────────
     // Stable ids. Append only. Missing elements are skipped at runtime.
@@ -1008,6 +1114,43 @@
       return out;
     }
     const spotEl = sp => sp.def.each ? document.querySelectorAll(sp.def.each)[sp.idx] : document.querySelector(sp.def.selector);
+    const spotLabel = sp => {
+      const text = spotEl(sp).textContent.replace(/\s+/g, ' ').trim();
+      return sp.def.each ? (sp.def.label ? sp.def.label + ' ' : '') + text : sp.def.label || text;
+    };
+
+    // Spot box in page coordinates, plus the point where the glasses sit.
+    function spotBox(sp) {
+      const e = spotEl(sp);
+      if (!e) return null;
+      const r = e.getBoundingClientRect(), at = sp.def.at || [0.5, 0.5];
+      const l = r.left + scrollX, t = r.top + scrollY;
+      return { el: e, l: l, t: t, w: r.width, h: r.height, x: l + r.width * at[0], y: t + r.height * at[1] };
+    }
+    const isBig = b => b.w * b.h > innerWidth * innerHeight / 4; // e.g. the wedge
+    const overlaps = (a, b) => a.l < b.l + b.w && b.l < a.l + a.w && a.t < b.t + b.h && b.t < a.t + a.h;
+
+    // Seeding. Every spot gets its own seeded score and the highest wins, so adding or
+    // removing other spots never changes which spot a seed picks.
+    function strHash(s) {
+      let h = 2166136261;
+      for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); }
+      return h >>> 0;
+    }
+    function mulberry32(a) {
+      return () => {
+        a = a + 0x6D2B79F5 | 0;
+        let t = Math.imul(a ^ a >>> 15, 1 | a);
+        t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+        return ((t ^ t >>> 14) >>> 0) / 4294967296;
+      };
+    }
+    function pickSpots(seed, decoys) {
+      const all = resolveSpots();
+      const ranked = all.map(sp => ({ sp: sp, k: mulberry32(seed ^ strHash(sp.id))() }))
+        .sort((a, b) => b.k - a.k).map(o => o.sp);
+      return { all: all, hide: ranked[0], decoys: ranked.slice(1, 1 + Math.min(decoys, ranked.length - 2)) };
+    }
 
     // ── UI: flyer, counter, speech bar, live region ───
     const flyer = button('ppg-flyer', null, () => onFlyer());
@@ -1032,15 +1175,22 @@
     const closeBtn = button('ppg-btn ppg-x', '×', () => closeBar());
     closeBtn.setAttribute('aria-label', TEXT.close);
     row.append(lineEl, triesEl, closeBtn);
-    bar.append(row);
+    const actions = make('div', 'ppg-row ppg-actions');
+    actions.hidden = true;
+    const againBtn = button('ppg-btn', TEXT.again, () => startRound());
+    actions.append(againBtn);
+    bar.append(row, actions);
 
     const live = make('div', 'ppg-sr');
     live.setAttribute('aria-live', 'polite');
 
-    document.body.append(flyer, bar, live);
+    const layer = make('div', 'ppg-layer'); // search targets and revealed glasses
+
+    document.body.append(flyer, bar, live, layer);
     if (!meta) document.body.append(counter);
 
     function updateCounter() { counter.textContent = TEXT.counter + state.finds; }
+    function updateTries() { triesEl.textContent = round && !round.over ? TEXT.tries + round.tries : ''; }
 
     // Pedro speaks: typewriter for the eyes (aria-hidden), whole line at once for screen readers.
     let typing = 0, announcing = 0;
@@ -1061,16 +1211,261 @@
       document.addEventListener('keydown', onKey);
     }
     function closeBar() {
+      clearRound();
       clearInterval(typing);
       bar.hidden = true;
       document.removeEventListener('keydown', onKey);
       flyer.focus();
     }
 
-    function onFlyer() {
-      showBar();
-      say(PEDRO_LINES.start[0]);
+    // ── Search mode ───────────────────────────────────
+    // Each spot gets an invisible button on top of it (at least 44x44), and everything else on
+    // the page is made inert, so links underneath can't be followed. The click guard backs that
+    // up for browsers without `inert`.
+    let hits = [], inerted = [];
+
+    function setInert(on, keep) {
+      if (on) {
+        inerted = Array.prototype.filter.call(document.body.children,
+          n => !/^(SCRIPT|STYLE)$/.test(n.tagName) && keep.indexOf(n) < 0 && !n.inert);
+        inerted.forEach(n => { n.inert = true; });
+      } else {
+        inerted.forEach(n => { n.inert = false; });
+        inerted = [];
+      }
     }
+
+    function guard(e) {
+      const a = e.target.closest && e.target.closest('a');
+      if (a && !layer.contains(a) && !bar.contains(a)) { e.preventDefault(); e.stopPropagation(); }
+    }
+
+    function enterSearch() {
+      setInert(true, [bar, live, layer]);
+      document.addEventListener('click', guard, true);
+      hits = round.spots.map(sp => {
+        const b = button('ppg-hit', null, e => { e.preventDefault(); e.stopPropagation(); onSpot(sp, e); });
+        b.setAttribute('aria-label', TEXT.search + spotLabel(sp));
+        return { sp: sp, b: b };
+      });
+      layoutHits();
+      // DOM order is Tab order: top to bottom, then left to right.
+      hits.slice().sort((a, b) => (a.row - b.row) || (a.x - b.x)).forEach(h => layer.append(h.b));
+    }
+
+    function exitSearch() {
+      hits.forEach(h => h.b.remove());
+      hits = [];
+      setInert(false);
+      document.removeEventListener('click', guard, true);
+    }
+
+    function layoutHits() {
+      const W = document.documentElement.scrollWidth, H = document.documentElement.scrollHeight;
+      hits.forEach(h => {
+        const s = h.box = spotBox(h.sp);
+        h.b.hidden = !s;
+        if (!s) return;
+        const w = Math.max(44, s.w), hh = Math.max(44, s.h);
+        const r = h.r = { l: s.l - (w - s.w) / 2, t: s.t - (hh - s.h) / 2, w: w, h: hh };
+        r.l = Math.max(0, Math.min(r.l, W - w));
+        r.t = Math.max(0, Math.min(r.t, H - hh));
+        h.big = isBig(s);
+        const clip = getComputedStyle(s.el).clipPath;
+        h.clip = clip && clip !== 'none' && w === s.w && hh === s.h ? clip : '';
+        h.row = Math.round(s.y / 32);
+        h.x = s.x;
+      });
+      const small = hits.filter(h => h.box && !h.big);
+      // Enlarged targets must not steal each other's taps: split overlaps half-way between the elements.
+      small.forEach((a, i) => small.slice(i + 1).forEach(b => {
+        if (!overlaps(a.r, b.r)) return;
+        [['t', 'h'], ['l', 'w']].some(k => {
+          const p = k[0], z = k[1], u = a.box[p] < b.box[p] ? a : b, d = u === a ? b : a;
+          if (u.box[p] + u.box[z] > d.box[p]) return false; // the elements themselves overlap on this axis
+          const m = (u.box[p] + u.box[z] + d.box[p]) / 2, end = d.r[p] + d.r[z];
+          u.r[z] = Math.min(u.r[z], m - u.r[p]);
+          d.r[p] = Math.max(d.r[p], m);
+          d.r[z] = end - d.r[p];
+          return true;
+        });
+      }));
+      // Give a cut target its 44px back on the free side, if nothing else is there.
+      small.forEach(h => [['t', 'h', H], ['l', 'w', W]].forEach(k => {
+        const p = k[0], z = k[1], lack = 44 - h.r[z];
+        if (lack <= 0) return;
+        [h.r[p] - lack, h.r[p]].some(start => {
+          const c = Object.assign({}, h.r);
+          c[p] = start;
+          c[z] = 44;
+          if (start < 0 || start + 44 > k[2] || small.some(o => o !== h && overlaps(c, o.r))) return false;
+          h.r = c;
+          return true;
+        });
+      }));
+      hits.forEach(h => {
+        if (!h.box) return;
+        const st = h.b.style;
+        st.left = h.r.l + 'px';
+        st.top = h.r.t + 'px';
+        st.width = h.r.w + 'px';
+        st.height = h.r.h + 'px';
+        st.clipPath = h.clip;
+        st.setProperty('--ax', h.box.x - h.r.l + 'px');
+        st.setProperty('--ay', h.box.y - h.r.t + 'px');
+        h.b.classList.toggle('ppg-hit-under', h.big);
+      });
+    }
+
+    // ── Glasses ───────────────────────────────────────
+    const GLASSES = '<svg viewBox="0 0 64 26" aria-hidden="true"><defs><linearGradient id="ppg-mirror" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#eef4fb"/><stop offset=".45" stop-color="#8aa6c4"/><stop offset="1" stop-color="#26364d"/></linearGradient></defs><path d="M2 9l6-2M62 9l-6-2M27 11q5-4 10 0" fill="none" stroke="#0a0a0a" stroke-width="2.5" stroke-linecap="round"/><ellipse cx="17" cy="14" rx="10.5" ry="8" fill="url(#ppg-mirror)" stroke="#0a0a0a" stroke-width="3"/><ellipse cx="47" cy="14" rx="10.5" ry="8" fill="url(#ppg-mirror)" stroke="#0a0a0a" stroke-width="3"/><path d="M11 13l5-4M41 13l5-4" stroke="#fff" stroke-width="1.6" stroke-linecap="round"/></svg>';
+    const DECOYS = [
+      // heart-shaped, pink
+      '<svg viewBox="0 0 64 26" aria-hidden="true"><path d="M27 10q5-4 10 0" fill="none" stroke="#0a0a0a" stroke-width="2.5"/><path id="ppg-h" d="M16 24C8 18 4 14 4 9.5a6 6 0 0 1 12-1.5 6 6 0 0 1 12 1.5C28 14 24 18 16 24z" fill="#ff3366" stroke="#0a0a0a" stroke-width="2"/><use href="#ppg-h" x="32"/></svg>',
+      // 3D glasses
+      '<svg viewBox="0 0 64 26" aria-hidden="true"><rect x="2" y="5" width="60" height="16" rx="2" fill="#fff" stroke="#0a0a0a" stroke-width="2"/><rect x="7" y="8" width="20" height="10" fill="#ff3366"/><rect x="37" y="8" width="20" height="10" fill="#00e5ff"/></svg>',
+      // stars, yellow
+      '<svg viewBox="0 0 64 26" aria-hidden="true"><path d="M27 10q5-4 10 0" fill="none" stroke="#0a0a0a" stroke-width="2.5"/><path id="ppg-s" d="M16 1l3.4 7.6 8.1.6-6.2 5.2 2 7.9L16 18l-7.3 4.3 2-7.9-6.2-5.2 8.1-.6z" fill="#ffcc00" stroke="#0a0a0a" stroke-width="1.8" stroke-linejoin="round"/><use href="#ppg-s" x="32"/></svg>',
+      // ski goggles
+      '<svg viewBox="0 0 64 26" aria-hidden="true"><path d="M0 13h64" stroke="#c33cff" stroke-width="6"/><rect x="8" y="3" width="48" height="20" rx="10" fill="#ff8c00" stroke="#0a0a0a" stroke-width="2.5"/><path d="M17 9h12" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>',
+    ];
+
+    let sprites = [];
+    function placeSprite(o) {
+      const b = spotBox(o.sp);
+      if (!b) return;
+      o.el.style.left = b.x + 'px';
+      o.el.style.top = b.y + 'px';
+    }
+    // Sprites exist only once revealed.
+    function reveal(sp, art) {
+      const o = { sp: sp, el: make('div', 'ppg-sprite') };
+      o.el.innerHTML = art;
+      layer.append(o.el);
+      sprites.push(o);
+      placeSprite(o);
+      return o;
+    }
+
+    // A miss: the spot wiggles. Big spots (the wedge) get a ring where they were tapped instead.
+    function nudge(sp, e) {
+      const b = spotBox(sp);
+      if (!b) return;
+      if (isBig(b)) {
+        const r = make('div', 'ppg-ring');
+        r.style.left = (e && e.detail ? e.pageX : b.x) + 'px';
+        r.style.top = (e && e.detail ? e.pageY : b.y) + 'px';
+        layer.append(r);
+        setTimeout(() => r.remove(), 700);
+        return;
+      }
+      b.el.classList.remove('ppg-wiggle');
+      void b.el.offsetWidth;
+      b.el.classList.add('ppg-wiggle');
+      setTimeout(() => b.el.classList.remove('ppg-wiggle'), 450);
+    }
+
+    // ── Rounds ────────────────────────────────────────
+    let round = null;
+
+    const levelFor = finds => ENDLESS_LEVELS.reduce((cur, l) => finds >= l.from ? l : cur, ENDLESS_LEVELS[0]);
+
+    function startRound() {
+      clearRound();
+      const cfg = levelFor(state.finds);
+      const pick = pickSpots(Math.floor(Math.random() * 4294967296), cfg.decoys);
+      if (!pick.hide) return;
+      round = {
+        cfg: cfg, tries: cfg.tries, used: 0, misses: 0, lastD: null, tried: {}, marks: '', over: false,
+        spots: pick.all, hide: pick.hide, decoys: pick.decoys.map(s => s.id),
+      };
+      showBar();
+      actions.hidden = true;
+      bar.classList.remove('ppg-bar-low');
+      updateTries();
+      enterSearch();
+      say(state.rounds || state.finds ? pickLine('start') : PEDRO_LINES.start[0]);
+      if (layer.firstChild) layer.firstChild.focus();
+    }
+
+    function clearRound() {
+      if (round && !round.over) exitSearch();
+      sprites.forEach(o => o.el.remove());
+      sprites = [];
+      round = null;
+    }
+
+    function onSpot(sp, e) {
+      if (!round || round.over) return;
+      if (round.tried[sp.id]) { nudge(sp, e); return; } // already searched: free
+      round.tried[sp.id] = true;
+      round.used++;
+      if (sp.id === round.hide.id) return win(sp);
+      round.tries--;
+      round.marks += '🟥';
+      const d = round.decoys.indexOf(sp.id);
+      let line;
+      if (d >= 0) {
+        reveal(sp, DECOYS[d % DECOYS.length]);
+        line = pickLine('decoy');
+      } else {
+        nudge(sp, e);
+        line = hint(sp);
+      }
+      updateTries();
+      if (round.tries > 0) say(line);
+      else lose();
+    }
+
+    // Honest hints, measured centre to centre at tap time.
+    function hint(sp) {
+      const a = spotBox(sp), b = spotBox(round.hide);
+      const d = Math.hypot(a.x - b.x, a.y - b.y) / Math.hypot(innerWidth, innerHeight);
+      const prev = round.lastD;
+      round.lastD = d;
+      if ((round.misses++) % round.cfg.every) return pickLine('silent');
+      if (round.cfg.hints === 'vague') {
+        const W = document.documentElement.scrollWidth, H = document.documentElement.scrollHeight;
+        const nx = b.x / W - 0.5, ny = b.y / H - 0.5;
+        return pickLine(Math.abs(ny) >= Math.abs(nx) ? (ny < 0 ? 'region_top' : 'region_bottom') : (nx < 0 ? 'region_left' : 'region_right'));
+      }
+      if (prev === null) return pickLine(d < HOT ? 'hot' : d < WARM ? 'warm' : 'cold');
+      return pickLine(Math.abs(d - prev) < SAME ? 'same' : d < prev ? 'warmer' : 'colder');
+    }
+
+    function finish(found) {
+      round.over = true;
+      round.found = found;
+      state.rounds++;
+      exitSearch();
+      updateTries();
+      actions.hidden = false;
+      // The taller end-of-round bar moves to the bottom if it would cover the glasses.
+      const b = spotBox(round.hide);
+      bar.classList.toggle('ppg-bar-low', !!b && b.y - scrollY < innerHeight * 0.45);
+      againBtn.focus();
+    }
+
+    function win(sp) {
+      round.marks += '🟩';
+      finish(true);
+      reveal(sp, GLASSES);
+      state.finds++;
+      saveState();
+      updateCounter();
+      say(pickLine('found'));
+    }
+
+    function lose() {
+      finish(false);
+      state.failed++;
+      saveState();
+      const o = reveal(round.hide, GLASSES);
+      setTimeout(() => o.el.classList.add('ppg-gone'), 2500);
+      say(pickLine('failed'));
+    }
+
+    function onFlyer() { startRound(); }
     function openStats() {}
 
     // Flyer placement: the free spot closest to "just above the tickets" that covers the least.
@@ -1137,7 +1532,11 @@
     let resizing = 0;
     function onResize() {
       cancelAnimationFrame(resizing);
-      resizing = requestAnimationFrame(placeFlyer);
+      resizing = requestAnimationFrame(() => {
+        placeFlyer();
+        layoutHits();
+        sprites.forEach(placeSprite);
+      });
     }
 
     updateCounter();
