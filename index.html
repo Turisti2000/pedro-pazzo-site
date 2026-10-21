@@ -393,71 +393,28 @@
   </style>
   <style>
     /* ===== FIND PEDRO'S SUNGLASSES ===== */
-    /* Easter-egg game styles. Remove this <style> block together with the game <script> block at the end of <body>. */
+    /* Easter-egg game styles. Remove together with the game <script> block at the end of <body>. */
 
-    /* Counter in the meta strip; the ::after widens the tap target without changing layout */
-    .ppg-count {
-      position: relative;
-      font: inherit;
-      letter-spacing: inherit;
-      text-transform: inherit;
-      color: inherit;
-      background: none;
-      border: 0;
-      padding: 0;
-      opacity: 0.75;
-      white-space: nowrap;
-      cursor: pointer;
-      -webkit-tap-highlight-color: transparent;
+    /* Shared button reset */
+    .ppg-count, .ppg-flyer, .ppg-btn, .ppg-hit, .ppg-link {
+      padding: 0; border: 0; background: none; color: inherit; font: inherit;
+      cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-color: transparent;
     }
-    .ppg-count::after {
-      content: '';
-      position: absolute;
-      left: -10px;
-      right: -10px;
-      top: 50%;
-      height: 44px;
-      margin-top: -22px;
-    }
-    .ppg-count-alone {
-      position: absolute;
-      z-index: 8;
-      font: 11px 'Special Elite', 'Courier New', monospace;
-      letter-spacing: 0.22em;
-      text-transform: uppercase;
-      color: var(--white);
-    }
+    .ppg-flyer:focus-visible, .ppg-count:focus-visible, .ppg-btn:focus-visible, .ppg-link:focus-visible { outline: 3px solid #ffcc00; outline-offset: 2px; }
+
+    /* Counter in the meta strip; ::after widens the tap target without changing layout */
+    .ppg-count { position: relative; letter-spacing: inherit; text-transform: inherit; opacity: 0.75; white-space: nowrap; }
+    .ppg-count::after { content: ''; position: absolute; left: -10px; right: -10px; top: 50%; height: 44px; margin-top: -22px; }
+    .ppg-count-alone { position: fixed; left: 16px; bottom: 8px; z-index: 8; font: 11px 'Special Elite', monospace; letter-spacing: 0.22em; text-transform: uppercase; color: var(--white); }
 
     /* LOST flyer, positioned by script */
     .ppg-flyer {
-      position: absolute;
-      left: 0;
-      top: 0;
-      z-index: 8;
-      visibility: hidden;
-      width: 132px;
-      padding: 14px 10px 8px;
-      background: #f2eee3;
-      color: var(--black);
-      border: 0;
-      font-family: 'Special Elite', 'Courier New', monospace;
-      text-align: left;
-      transform: rotate(-2deg);
-      box-shadow: 2px 3px 0 rgba(0,0,0,0.35);
-      cursor: pointer;
-      -webkit-tap-highlight-color: transparent;
+      position: absolute; left: 0; top: 0; z-index: 8; visibility: hidden;
+      width: 132px; padding: 14px 10px 8px; text-align: left;
+      background: #f2eee3; color: var(--black); font-family: 'Special Elite', 'Courier New', monospace;
+      transform: rotate(-2deg); box-shadow: 2px 3px 0 rgba(0,0,0,0.35);
     }
-    .ppg-flyer::before {
-      content: '';
-      position: absolute;
-      top: -7px;
-      left: 50%;
-      width: 44px;
-      height: 14px;
-      margin-left: -22px;
-      background: rgba(235,225,200,0.75);
-      transform: rotate(3deg);
-    }
+    .ppg-flyer::before { content: ''; position: absolute; top: -7px; left: 50%; width: 44px; height: 14px; margin-left: -22px; background: rgba(235,225,200,0.75); transform: rotate(3deg); }
     .ppg-flyer > span { display: block; }
     .ppg-flyer-h { font-size: 17px; letter-spacing: 0.12em; line-height: 1; }
     .ppg-flyer-b { font-size: 9px; line-height: 1.25; margin-top: 4px; }
@@ -465,148 +422,44 @@
     .ppg-flyer-compact { width: auto; padding: 12px 10px 6px; }
     .ppg-flyer-compact .ppg-flyer-b { display: none; }
 
-    /* Speech bar: Pedro's line, tries, controls. Fixed to the top while a round is open. */
+    /* Speech bar: Pedro's line, tries and controls; at the top while searching */
     .ppg-bar {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      z-index: 950;
-      background: var(--black);
-      color: var(--white);
-      border-bottom: 2px solid var(--white);
-      font-family: 'Special Elite', 'Courier New', monospace;
-      font-size: 15px;
-      line-height: 1.3;
-      padding: 4px 4px 4px 16px;
-      padding-top: max(4px, env(safe-area-inset-top));
+      position: fixed; top: 0; left: 0; right: 0; z-index: 950;
+      padding: 4px 4px 4px 16px; padding-top: max(4px, env(safe-area-inset-top));
+      background: var(--black); color: var(--white); border-bottom: 2px solid var(--white);
+      font: 15px/1.3 'Special Elite', 'Courier New', monospace;
     }
-    .ppg-bar-low {
-      top: auto;
-      bottom: 0;
-      border-bottom: 0;
-      border-top: 2px solid var(--white);
-      padding-top: 4px;
-      padding-bottom: max(4px, env(safe-area-inset-bottom));
-    }
+    .ppg-bar-low { top: auto; bottom: 0; border-bottom: 0; border-top: 2px solid var(--white); padding-top: 4px; padding-bottom: max(4px, env(safe-area-inset-bottom)); }
     .ppg-bar[hidden], .ppg-bar [hidden] { display: none; }
     .ppg-row { display: flex; align-items: center; gap: 8px; min-height: 44px; }
+    .ppg-actions { padding-bottom: 6px; }
     .ppg-line { flex: 1; min-width: 0; }
     .ppg-rest { visibility: hidden; }
-    .ppg-tries {
-      font-size: 11px;
-      letter-spacing: 0.2em;
-      text-transform: uppercase;
-      opacity: 0.75;
-      white-space: nowrap;
-    }
-    .ppg-btn {
-      min-width: 44px;
-      min-height: 44px;
-      padding: 0 12px;
-      background: none;
-      color: inherit;
-      border: 1px solid rgba(255,255,255,0.5);
-      font: inherit;
-      font-size: 13px;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      cursor: pointer;
-      -webkit-tap-highlight-color: transparent;
-    }
+    .ppg-tries, .ppg-status { font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; opacity: 0.75; white-space: nowrap; }
+    .ppg-btn { min-width: 44px; min-height: 44px; padding: 0 12px; border: 1px solid rgba(255,255,255,0.5); font-size: 13px; letter-spacing: 0.12em; text-transform: uppercase; }
     .ppg-x { border: 0; padding: 0; font-size: 26px; line-height: 1; }
+    .ppg-copy { display: block; width: calc(100% - 12px); margin: 0 0 8px; padding: 6px 8px; border: 0; resize: none; background: #f2eee3; color: var(--black); font: 14px/1.35 'Special Elite', monospace; }
+    .ppg-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 
-    .ppg-sr {
-      position: absolute;
-      width: 1px;
-      height: 1px;
-      overflow: hidden;
-      clip: rect(0 0 0 0);
-      clip-path: inset(50%);
-      white-space: nowrap;
-    }
-
-    .ppg-actions { padding-bottom: 6px; }
-    .ppg-status { font-size: 12px; letter-spacing: 0.15em; text-transform: uppercase; opacity: 0.75; }
-    .ppg-copy {
-      display: block;
-      width: calc(100% - 12px);
-      margin: 0 0 8px;
-      padding: 6px 8px;
-      border: 0;
-      resize: none;
-      background: #f2eee3;
-      color: var(--black);
-      font: 14px/1.35 'Special Elite', 'Courier New', monospace;
-    }
-
-    /* Search mode: invisible tap targets laid over the hiding spots */
+    /* Search mode: invisible tap targets over the hiding spots */
     .ppg-layer { position: absolute; left: 0; top: 0; z-index: 900; }
-    .ppg-hit {
-      position: absolute;
-      z-index: 1;
-      padding: 0;
-      border: 0;
-      background: transparent;
-      cursor: pointer;
-      touch-action: manipulation;
-      -webkit-tap-highlight-color: transparent;
-    }
+    .ppg-hit { position: absolute; z-index: 1; }
     .ppg-hit-under { z-index: 0; }
     .ppg-hit:focus-visible { outline: 3px solid #ffcc00; outline-offset: -3px; }
     .ppg-hit-under:focus-visible { outline: 0; }
-    .ppg-hit-under:focus-visible::after {
-      content: '';
-      position: absolute;
-      left: var(--ax);
-      top: var(--ay);
-      width: 44px;
-      height: 44px;
-      margin: -22px;
-      border: 3px solid #ffcc00;
-      border-radius: 50%;
-    }
+    .ppg-hit-under:focus-visible::after { content: ''; position: absolute; left: var(--ax); top: var(--ay); width: 44px; height: 44px; margin: -22px; border: 3px solid #ffcc00; border-radius: 50%; }
 
-    /* Revealed glasses (real and decoys) */
-    .ppg-sprite {
-      position: absolute;
-      z-index: 2;
-      width: 64px;
-      height: 26px;
-      margin: -13px 0 0 -32px;
-      pointer-events: none;
-      animation: ppg-peek 0.5s ease-out;
-      transition: opacity 0.6s;
-    }
-    .ppg-sprite svg {
-      display: block;
-      width: 100%;
-      height: 100%;
-      overflow: visible;
-      filter: drop-shadow(0 0 1px #fff) drop-shadow(1px 2px 0 rgba(0,0,0,0.4));
-    }
+    /* Revealed glasses, misses */
+    .ppg-sprite { position: absolute; z-index: 2; width: 64px; height: 26px; margin: -13px 0 0 -32px; pointer-events: none; animation: ppg-peek 0.5s ease-out; transition: opacity 0.6s; }
+    .ppg-sprite svg { display: block; width: 100%; height: 100%; overflow: visible; filter: drop-shadow(0 0 1px #fff) drop-shadow(1px 2px 0 rgba(0,0,0,0.4)); }
     .ppg-gone { opacity: 0; }
-    .ppg-ring {
-      position: absolute;
-      z-index: 2;
-      width: 40px;
-      height: 40px;
-      margin: -20px;
-      border: 2px solid var(--white);
-      border-radius: 50%;
-      pointer-events: none;
-      animation: ppg-ring 0.6s ease-out forwards;
-    }
+    .ppg-ring { position: absolute; z-index: 2; width: 40px; height: 40px; margin: -20px; border: 2px solid var(--white); border-radius: 50%; pointer-events: none; animation: ppg-ring 0.6s ease-out forwards; }
     .ppg-wiggle { animation: ppg-wiggle 0.4s ease-in-out; }
-
     @keyframes ppg-peek {
       0% { opacity: 0; transform: translateY(12px) scale(0.4) rotate(-14deg); }
       60% { opacity: 1; transform: translateY(-4px) scale(1.1) rotate(5deg); }
     }
-    @keyframes ppg-ring {
-      from { transform: scale(0.4); }
-      to { transform: scale(1.3); opacity: 0; }
-    }
+    @keyframes ppg-ring { from { transform: scale(0.4); } to { transform: scale(1.3); opacity: 0; } }
     /* translate/rotate compose with the transforms the page already sets on these elements */
     @keyframes ppg-wiggle {
       20% { translate: -4px 0; rotate: -2deg; }
@@ -618,77 +471,23 @@
     @keyframes ppg-fade-out { to { opacity: 0; } }
 
     /* Stats panel: a ticket stub with punched notches */
-    .ppg-backdrop {
-      position: fixed;
-      inset: 0;
-      z-index: 960;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 16px;
-      background: rgba(10,10,10,0.6);
-    }
+    .ppg-backdrop { position: fixed; inset: 0; z-index: 960; display: flex; align-items: center; justify-content: center; padding: 16px; background: rgba(10,10,10,0.6); }
     .ppg-stub {
-      position: relative;
-      width: 100%;
-      max-width: 340px;
-      padding: 22px 24px 12px;
-      color: var(--black);
-      font-family: 'Special Elite', 'Courier New', monospace;
-      font-size: 15px;
+      position: relative; width: 100%; max-width: 340px; padding: 22px 24px 12px;
+      color: var(--black); font: 15px 'Special Elite', 'Courier New', monospace;
       background:
         radial-gradient(circle at 0 50%, transparent 11px, var(--white) 12px) left / 51% 100% no-repeat,
         radial-gradient(circle at 100% 50%, transparent 11px, var(--white) 12px) right / 51% 100% no-repeat;
-      filter: drop-shadow(4px 4px 0 rgba(0,0,0,0.35));
-      transform: rotate(-1deg);
+      filter: drop-shadow(4px 4px 0 rgba(0,0,0,0.35)); transform: rotate(-1deg);
     }
     .ppg-stub .ppg-x { position: absolute; top: 6px; right: 6px; }
-    .ppg-stub-h {
-      font-family: 'Rubik Mono One', 'Stardos Stencil', sans-serif;
-      font-weight: 400;
-      font-size: 20px;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      padding-bottom: 10px;
-      margin-bottom: 12px;
-      border-bottom: 2px dashed var(--black);
-    }
     .ppg-stub :focus-visible { outline-color: var(--black); }
+    .ppg-stub-h { font: 20px 'Rubik Mono One', 'Stardos Stencil', sans-serif; letter-spacing: 0.08em; text-transform: uppercase; padding-bottom: 10px; margin-bottom: 12px; border-bottom: 2px dashed var(--black); }
     .ppg-stats { display: grid; grid-template-columns: auto 1fr; gap: 8px 14px; }
-    .ppg-stats dt {
-      font-size: 11px;
-      letter-spacing: 0.16em;
-      text-transform: uppercase;
-      opacity: 0.6;
-      align-self: center;
-    }
+    .ppg-stats dt { font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; opacity: 0.6; align-self: center; }
     .ppg-stats dd { text-align: right; }
-    .ppg-reset {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      gap: 0 14px;
-      margin-top: 14px;
-      border-top: 2px dashed var(--black);
-      font-size: 12px;
-    }
-    .ppg-link {
-      min-height: 44px;
-      padding: 0;
-      background: none;
-      border: 0;
-      color: inherit;
-      font: inherit;
-      text-decoration: underline;
-      cursor: pointer;
-      touch-action: manipulation;
-    }
-
-    .ppg-flyer, .ppg-btn { touch-action: manipulation; }
-    .ppg-flyer:focus-visible, .ppg-count:focus-visible, .ppg-btn:focus-visible, .ppg-link:focus-visible {
-      outline: 3px solid #ffcc00;
-      outline-offset: 2px;
-    }
+    .ppg-reset { display: flex; flex-wrap: wrap; align-items: center; gap: 0 14px; margin-top: 14px; border-top: 2px dashed var(--black); font-size: 12px; }
+    .ppg-link { min-height: 44px; text-decoration: underline; }
 
     @media (min-width: 720px) {
       .ppg-flyer { width: 170px; }
@@ -698,13 +497,11 @@
       .ppg-bar { padding-left: 40px; padding-right: 28px; font-size: 17px; }
       .ppg-sprite { width: 96px; height: 39px; margin: -20px 0 0 -48px; }
     }
-
     @media (prefers-reduced-motion: reduce) {
       .ppg-sprite { animation: ppg-fade-in 0.3s; }
       .ppg-ring { animation: ppg-fade-out 0.6s forwards; }
       .ppg-wiggle { animation: none; }
     }
-
     /* ===== END FIND PEDRO'S SUNGLASSES ===== */
   </style>
 </head>
@@ -1040,7 +837,7 @@
       region_left: ['Left side.', 'Left side of the page.', 'Somewhere on the left.', 'Left. Definitely left.', 'Left side. I\'m sure of that much.', 'They\'re on the left.'],
       region_right: ['Right side.', 'Right side of the page.', 'Somewhere on the right.', 'Right. Definitely right.', 'Right side. I\'m sure of that much.', 'They\'re on the right.'],
       silent: ['Hm.', 'Keep going.', 'No.', 'Not there.', 'Nope.', 'Mm.'],
-      decoy: ['Those are mine. Wait, no.', 'Not those. Those are someone else\'s.', 'Close. Wrong pair.', 'Those are for skiing.', 'Not mine. Too fancy.', 'Where did those come from?'],
+      decoy: ['Those are mine. Wait, no.', 'Not those. Those are someone else\'s.', 'Close. Wrong pair.', 'Wrong pair. Nice, though.', 'Not mine. Too fancy.', 'Where did those come from?'],
       found: ['There they are.', 'Oh. Thanks.', 'Found them. Great. Now what.', 'Ah. That\'s where I left them.', 'Hey. That\'s them.', 'Yes. Those. Thank you.'],
       failed: ['Never mind. I\'ll squint.', 'They were there. Of course.', 'Oh well. There they were.', 'Out of tries. They were right there.', 'Never mind. Cloudy anyway.', 'That\'s where they were. Who knew.'],
       daily_done: ['That\'s today\'s done. This one\'s extra.', 'Today\'s pair is sorted. Here\'s a spare.', 'You\'ve had today\'s. This is practice.', 'Daily\'s done. New one tomorrow. Meanwhile:', 'Today\'s is done. I lose these a lot.', 'Another pair. Don\'t ask.'],
@@ -1222,8 +1019,8 @@
     const isBig = b => b.w * b.h > innerWidth * innerHeight / 4; // e.g. the wedge
     const overlaps = (a, b) => a.l < b.l + b.w && b.l < a.l + a.w && a.t < b.t + b.h && b.t < a.t + a.h;
 
-    // Seeding. Every spot gets its own seeded score and the highest wins, so adding or
-    // removing other spots never changes which spot a seed picks.
+    // Seeding: each spot gets its own seeded score and the highest wins, so adding or
+    // removing other spots never changes a seed's pick.
     function strHash(s) {
       let h = 2166136261;
       for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); }
@@ -1252,7 +1049,7 @@
     counter.setAttribute('aria-haspopup', 'dialog');
     const meta = document.querySelector('.meta');
     if (meta) meta.insertBefore(counter, meta.children[1] || null);
-    else counter.classList.add('ppg-count-alone'); // placed under the flyer
+    else counter.classList.add('ppg-count-alone'); // no meta strip any more: pinned bottom-left by CSS
 
     const bar = make('div', 'ppg-bar');
     bar.hidden = true;
@@ -1305,7 +1102,18 @@
       if (i < text.length) typing = setInterval(() => { i++; draw(); if (i >= text.length) clearInterval(typing); }, 28);
     }
 
-    function onKey(e) { if (e.key === 'Escape') closeBar(); }
+    // Keep Tab inside a set of controls, wrapping at both ends.
+    function cycle(e, list) {
+      if (e.key !== 'Tab' || !list.length) return;
+      const first = list[0], last = list[list.length - 1];
+      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+    }
+
+    function onKey(e) {
+      if (e.key === 'Escape') closeBar();
+      else if (hits.length) cycle(e, [closeBtn].concat(Array.prototype.slice.call(layer.querySelectorAll('.ppg-hit:not([hidden])'))));
+    }
     function showBar() {
       bar.hidden = false;
       document.addEventListener('keydown', onKey);
@@ -1325,9 +1133,8 @@
     }
 
     // ── Search mode ───────────────────────────────────
-    // Each spot gets an invisible button on top of it (at least 44x44), and everything else on
-    // the page is made inert, so links underneath can't be followed. The click guard backs that
-    // up for browsers without `inert`.
+    // Invisible buttons (min 44x44) over each spot; the rest of the page goes inert so links
+    // can't be followed. The click guard covers browsers without `inert`.
     let hits = [], inerted = [];
 
     function setInert(on, keep) {
@@ -1424,16 +1231,14 @@
     }
 
     // ── Glasses ───────────────────────────────────────
-    const GLASSES = '<svg viewBox="0 0 64 26" aria-hidden="true"><defs><linearGradient id="ppg-mirror" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#eef4fb"/><stop offset=".45" stop-color="#8aa6c4"/><stop offset="1" stop-color="#26364d"/></linearGradient></defs><path d="M2 9l6-2M62 9l-6-2M27 11q5-4 10 0" fill="none" stroke="#0a0a0a" stroke-width="2.5" stroke-linecap="round"/><ellipse cx="17" cy="14" rx="10.5" ry="8" fill="url(#ppg-mirror)" stroke="#0a0a0a" stroke-width="3"/><ellipse cx="47" cy="14" rx="10.5" ry="8" fill="url(#ppg-mirror)" stroke="#0a0a0a" stroke-width="3"/><path d="M11 13l5-4M41 13l5-4" stroke="#fff" stroke-width="1.6" stroke-linecap="round"/></svg>';
+    const GLASSES = '<svg viewBox="0 0 64 26"><defs><linearGradient id="ppg-mirror" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#eef4fb"/><stop offset=".45" stop-color="#8aa6c4"/><stop offset="1" stop-color="#26364d"/></linearGradient></defs><path d="M2 9l6-2M62 9l-6-2M27 11q5-4 10 0" fill="none" stroke="#0a0a0a" stroke-width="2.5" stroke-linecap="round"/><ellipse cx="17" cy="14" rx="10.5" ry="8" fill="url(#ppg-mirror)" stroke="#0a0a0a" stroke-width="3"/><ellipse cx="47" cy="14" rx="10.5" ry="8" fill="url(#ppg-mirror)" stroke="#0a0a0a" stroke-width="3"/><path d="M11 13l5-4M41 13l5-4" stroke="#fff" stroke-width="1.6" stroke-linecap="round"/></svg>';
     const DECOYS = [
       // heart-shaped, pink
-      '<svg viewBox="0 0 64 26" aria-hidden="true"><path d="M27 10q5-4 10 0" fill="none" stroke="#0a0a0a" stroke-width="2.5"/><path id="ppg-h" d="M16 24C8 18 4 14 4 9.5a6 6 0 0 1 12-1.5 6 6 0 0 1 12 1.5C28 14 24 18 16 24z" fill="#ff3366" stroke="#0a0a0a" stroke-width="2"/><use href="#ppg-h" x="32"/></svg>',
+      '<svg viewBox="0 0 64 26"><path d="M27 10q5-4 10 0" fill="none" stroke="#0a0a0a" stroke-width="2.5"/><path id="ppg-h" d="M16 24C8 18 4 14 4 9.5a6 6 0 0 1 12-1.5 6 6 0 0 1 12 1.5C28 14 24 18 16 24z" fill="#ff3366" stroke="#0a0a0a" stroke-width="2"/><use href="#ppg-h" x="32"/></svg>',
       // 3D glasses
-      '<svg viewBox="0 0 64 26" aria-hidden="true"><rect x="2" y="5" width="60" height="16" rx="2" fill="#fff" stroke="#0a0a0a" stroke-width="2"/><rect x="7" y="8" width="20" height="10" fill="#ff3366"/><rect x="37" y="8" width="20" height="10" fill="#00e5ff"/></svg>',
+      '<svg viewBox="0 0 64 26"><rect x="2" y="5" width="60" height="16" rx="2" fill="#fff" stroke="#0a0a0a" stroke-width="2"/><rect x="7" y="8" width="20" height="10" fill="#ff3366"/><rect x="37" y="8" width="20" height="10" fill="#00e5ff"/></svg>',
       // stars, yellow
-      '<svg viewBox="0 0 64 26" aria-hidden="true"><path d="M27 10q5-4 10 0" fill="none" stroke="#0a0a0a" stroke-width="2.5"/><path id="ppg-s" d="M16 1l3.4 7.6 8.1.6-6.2 5.2 2 7.9L16 18l-7.3 4.3 2-7.9-6.2-5.2 8.1-.6z" fill="#ffcc00" stroke="#0a0a0a" stroke-width="1.8" stroke-linejoin="round"/><use href="#ppg-s" x="32"/></svg>',
-      // ski goggles
-      '<svg viewBox="0 0 64 26" aria-hidden="true"><path d="M0 13h64" stroke="#c33cff" stroke-width="6"/><rect x="8" y="3" width="48" height="20" rx="10" fill="#ff8c00" stroke="#0a0a0a" stroke-width="2.5"/><path d="M17 9h12" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>',
+      '<svg viewBox="0 0 64 26"><path d="M27 10q5-4 10 0" fill="none" stroke="#0a0a0a" stroke-width="2.5"/><path id="ppg-s" d="M16 1l3.4 7.6 8.1.6-6.2 5.2 2 7.9L16 18l-7.3 4.3 2-7.9-6.2-5.2 8.1-.6z" fill="#ffcc00" stroke="#0a0a0a" stroke-width="1.8" stroke-linejoin="round"/><use href="#ppg-s" x="32"/></svg>',
     ];
 
     let sprites = [];
@@ -1446,6 +1251,7 @@
     // Sprites exist only once revealed.
     function reveal(sp, art) {
       const o = { sp: sp, el: make('div', 'ppg-sprite') };
+      o.el.setAttribute('aria-hidden', 'true');
       o.el.innerHTML = art;
       layer.append(o.el);
       sprites.push(o);
@@ -1672,10 +1478,7 @@
 
     function trap(e) {
       if (e.key === 'Escape') { e.stopPropagation(); closeStats(); return; }
-      if (e.key !== 'Tab') return;
-      const f = modal.querySelectorAll('button'), first = f[0], last = f[f.length - 1];
-      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
-      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+      cycle(e, Array.prototype.slice.call(modal.querySelectorAll('button')));
     }
 
     function renderStats() {
@@ -1711,14 +1514,14 @@
       return close;
     }
 
-    // Flyer placement: the free spot closest to "just above the tickets" that covers the least.
-    // Recomputed on resize, so it keeps finding room as the page changes.
+    // Flyer placement: the spot nearest "just above the tickets" that covers the least,
+    // recomputed on resize so it keeps finding room as the page changes.
     function obstacles() {
       const heavy = resolveSpots().map(spotEl);
       const out = [{ l: 0, t: 0, r: innerWidth, b: 60, w: 3 }]; // keep clear of the speech bar
       document.querySelectorAll('body *').forEach(n => {
         if (/^(SCRIPT|STYLE|TEXTAREA)$/.test(n.tagName)) return;
-        if (n.closest('.ppg-flyer, .ppg-bar, .ppg-layer, .ppg-count-alone, [aria-hidden="true"]')) return;
+        if (n.closest('.ppg-flyer, .ppg-bar, .ppg-layer, [aria-hidden="true"]')) return;
         if (!/^(svg|IMG|A|BUTTON)$/.test(n.tagName) && !hasText(n)) return;
         const r = n.getBoundingClientRect();
         if (!r.width || !r.height) return;
@@ -1729,7 +1532,7 @@
     }
 
     function freeSpot(blocks) {
-      const fw = flyer.offsetWidth, fh = flyer.offsetHeight + (meta ? 0 : 26);
+      const fw = flyer.offsetWidth, fh = flyer.offsetHeight;
       const vw = document.documentElement.clientWidth, vh = innerHeight;
       const ticket = document.querySelector('.links .ticket');
       let px = vw - 16 - fw, py = vh * 0.55;
@@ -1766,10 +1569,6 @@
       flyer.style.left = best.x + scrollX + 'px';
       flyer.style.top = best.y + scrollY + 'px';
       flyer.style.visibility = 'visible';
-      if (!meta) {
-        counter.style.left = best.x + scrollX + 'px';
-        counter.style.top = best.y + scrollY + flyer.offsetHeight + 8 + 'px';
-      }
     }
 
     let resizing = 0;
