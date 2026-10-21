@@ -605,8 +605,75 @@
     @keyframes ppg-fade-in { from { opacity: 0; } }
     @keyframes ppg-fade-out { to { opacity: 0; } }
 
+    /* Stats panel: a ticket stub with punched notches */
+    .ppg-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 960;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      background: rgba(10,10,10,0.6);
+    }
+    .ppg-stub {
+      position: relative;
+      width: 100%;
+      max-width: 340px;
+      padding: 22px 24px 12px;
+      color: var(--black);
+      font-family: 'Special Elite', 'Courier New', monospace;
+      font-size: 15px;
+      background:
+        radial-gradient(circle at 0 50%, transparent 11px, var(--white) 12px) left / 51% 100% no-repeat,
+        radial-gradient(circle at 100% 50%, transparent 11px, var(--white) 12px) right / 51% 100% no-repeat;
+      filter: drop-shadow(4px 4px 0 rgba(0,0,0,0.35));
+      transform: rotate(-1deg);
+    }
+    .ppg-stub .ppg-x { position: absolute; top: 6px; right: 6px; }
+    .ppg-stub-h {
+      font-family: 'Rubik Mono One', 'Stardos Stencil', sans-serif;
+      font-weight: 400;
+      font-size: 20px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding-bottom: 10px;
+      margin-bottom: 12px;
+      border-bottom: 2px dashed var(--black);
+    }
+    .ppg-stub :focus-visible { outline-color: var(--black); }
+    .ppg-stats { display: grid; grid-template-columns: auto 1fr; gap: 8px 14px; }
+    .ppg-stats dt {
+      font-size: 11px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      opacity: 0.6;
+      align-self: center;
+    }
+    .ppg-stats dd { text-align: right; }
+    .ppg-reset {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0 14px;
+      margin-top: 14px;
+      border-top: 2px dashed var(--black);
+      font-size: 12px;
+    }
+    .ppg-link {
+      min-height: 44px;
+      padding: 0;
+      background: none;
+      border: 0;
+      color: inherit;
+      font: inherit;
+      text-decoration: underline;
+      cursor: pointer;
+      touch-action: manipulation;
+    }
+
     .ppg-flyer, .ppg-btn { touch-action: manipulation; }
-    .ppg-flyer:focus-visible, .ppg-count:focus-visible, .ppg-btn:focus-visible {
+    .ppg-flyer:focus-visible, .ppg-count:focus-visible, .ppg-btn:focus-visible, .ppg-link:focus-visible {
       outline: 3px solid #ffcc00;
       outline-offset: 2px;
     }
@@ -992,7 +1059,7 @@
       statTitle: 'Title',
       noTitle: 'No title yet',
       statNext: 'Next title',
-      nextIn: '{title} in {n}',
+      nextIn: '{title}: {n} to go',
       lastTitle: 'That was the last one',
       statStreak: 'Streak',
       statBest: 'Best streak',
@@ -1451,9 +1518,15 @@
       finish(true);
       reveal(sp, GLASSES);
       state.finds++;
+      let line = pickLine('found');
+      const t = titleFor(state.finds);
+      if (t && t.at > state.lastTitleAt) {
+        state.lastTitleAt = t.at;
+        line += ' ' + fmt(TEXT.titleReached, t);
+      }
       saveState();
       updateCounter();
-      say(pickLine('found'));
+      say(line);
     }
 
     function lose() {
@@ -1466,7 +1539,81 @@
     }
 
     function onFlyer() { startRound(); }
-    function openStats() {}
+
+    // ── Titles and stats ──────────────────────────────
+    const titleFor = n => TITLES.reduce((cur, t) => n >= t.at ? t : cur, null);
+    const nextTitle = n => TITLES.filter(t => t.at > n)[0] || null;
+    const dateKey = d => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+
+    function todayStatus() {
+      const r = state.lastDailyResult;
+      if (state.lastDailyDate !== dateKey(new Date()) || !r) return TEXT.todayNone;
+      return r.found ? fmt(TEXT.todayFound, r) : TEXT.todayFailed;
+    }
+
+    let modal = null;
+    function openStats() {
+      if (modal) return;
+      modal = make('div', 'ppg-backdrop');
+      const box = make('div', 'ppg-stub');
+      box.setAttribute('role', 'dialog');
+      box.setAttribute('aria-modal', 'true');
+      box.setAttribute('aria-labelledby', 'ppg-stats-h');
+      modal.append(box);
+      modal.addEventListener('click', e => { if (e.target === modal) closeStats(); });
+      modal.addEventListener('keydown', trap);
+      document.body.append(modal);
+      setInert(true, [modal, live]);
+      renderStats().focus();
+    }
+
+    function closeStats() {
+      modal.remove();
+      modal = null;
+      setInert(false);
+      counter.focus();
+    }
+
+    function trap(e) {
+      if (e.key === 'Escape') { e.stopPropagation(); closeStats(); return; }
+      if (e.key !== 'Tab') return;
+      const f = modal.querySelectorAll('button'), first = f[0], last = f[f.length - 1];
+      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+    }
+
+    function renderStats() {
+      const box = modal.firstChild;
+      box.textContent = '';
+      const close = button('ppg-btn ppg-x', '×', closeStats);
+      close.setAttribute('aria-label', TEXT.close);
+      const h = make('h2', 'ppg-stub-h', TEXT.statsTitle);
+      h.id = 'ppg-stats-h';
+      const t = titleFor(state.finds), n = nextTitle(state.finds);
+      const dl = make('dl', 'ppg-stats');
+      [
+        [TEXT.statFound, state.finds],
+        [TEXT.statTitle, t ? t.title : TEXT.noTitle],
+        [TEXT.statNext, n ? fmt(TEXT.nextIn, { title: n.title, n: n.at - state.finds }) : TEXT.lastTitle],
+        [TEXT.statStreak, state.streak],
+        [TEXT.statBest, state.bestStreak],
+        [TEXT.statToday, todayStatus()],
+      ].forEach(r => dl.append(make('dt', null, r[0]), make('dd', null, String(r[1]))));
+      const reset = make('div', 'ppg-reset');
+      reset.append(button('ppg-link', TEXT.reset, () => {
+        reset.textContent = '';
+        const no = button('ppg-link', TEXT.resetNo, () => renderStats().focus());
+        reset.append(make('span', null, TEXT.resetAsk), button('ppg-link', TEXT.resetYes, () => {
+          state = Object.assign({}, DEFAULTS);
+          saveState();
+          updateCounter();
+          renderStats().focus();
+        }), no);
+        no.focus();
+      }));
+      box.append(close, h, dl, reset);
+      return close;
+    }
 
     // Flyer placement: the free spot closest to "just above the tickets" that covers the least.
     // Recomputed on resize, so it keeps finding room as the page changes.
