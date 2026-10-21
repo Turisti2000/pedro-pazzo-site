@@ -391,6 +391,12 @@
       }
     }
   </style>
+  <style>
+    /* ===== FIND PEDRO'S SUNGLASSES ===== */
+    /* Easter-egg game styles. Remove this <style> block together with the game <script> block at the end of <body>. */
+
+    /* ===== END FIND PEDRO'S SUNGLASSES ===== */
+  </style>
 </head>
 <body class="grain">
   <div class="page">
@@ -689,6 +695,45 @@
       }
       setTimeout(next, 16000);
     })();
+  </script>
+
+  <script>
+  /* ===== FIND PEDRO'S SUNGLASSES ===== */
+  /*
+    Easter-egg game. Everything it needs lives in this <script> block and the <style> block
+    of the same name in <head>. It adds no hooks to the page markup above.
+    - Switch it off: set GAME_ENABLED = false below, or open the page with ?nogame.
+    - Remove it: delete both blocks.
+    - New song tickets become hiding spots automatically. Other new page elements can be
+      added as spots by appending to SPOTS (never reorder or remove entries).
+  */
+  (function () {
+    'use strict';
+
+    // ── Hiding spots ──────────────────────────────────
+    // Stable ids. Append only. Missing elements are skipped at runtime.
+    // `each` registers every match as `<id>-1`, `<id>-2`, … in page order.
+    // `at` is the point (fraction of the element box) where the glasses sit and hints measure from.
+    const SPOTS_VERSION = 1;
+    const SPOTS = [
+      { id: 'name-p1', selector: '#name-line-1 > .glitch-cell:nth-child(1)', label: 'letter P in Pedro' },
+      { id: 'name-e1', selector: '#name-line-1 > .glitch-cell:nth-child(2)', label: 'letter E' },
+      { id: 'name-d1', selector: '#name-line-1 > .glitch-cell:nth-child(3)', label: 'letter D' },
+      { id: 'name-r1', selector: '#name-line-1 > .glitch-cell:nth-child(4)', label: 'letter R' },
+      { id: 'name-o1', selector: '#name-line-1 > .glitch-cell:nth-child(5)', label: 'letter O in Pedro' },
+      { id: 'name-p2', selector: '#name-line-2 > .glitch-cell:nth-child(1)', label: 'letter P in Pazzo' },
+      { id: 'name-a1', selector: '#name-line-2 > .glitch-cell:nth-child(2)', label: 'letter A' },
+      { id: 'name-z1', selector: '#name-line-2 > .glitch-cell:nth-child(3)', label: 'first letter Z' },
+      { id: 'name-z2', selector: '#name-line-2 > .glitch-cell:nth-child(4)', label: 'second letter Z' },
+      { id: 'name-o2', selector: '#name-line-2 > .glitch-cell:nth-child(5)', label: 'letter O in Pazzo' },
+      { id: 'ticket',  each: '.links .ticket' },
+      { id: 'side-b',  selector: '#side-b', label: 'Side B badge' },
+      { id: 'wedge',   selector: '.wedge', at: [0.88, 0.1], label: 'black wedge' },
+      { id: 'insta',   selector: '.insta-anchor', label: 'Instagram link' },
+      { id: 'footer',  selector: '.footer', label: 'footer' },
+    ];
+  })();
+  /* ===== END FIND PEDRO'S SUNGLASSES ===== */
   </script>
 </body>
 </html>
