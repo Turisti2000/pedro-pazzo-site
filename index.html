@@ -395,6 +395,142 @@
     /* ===== FIND PEDRO'S SUNGLASSES ===== */
     /* Easter-egg game styles. Remove this <style> block together with the game <script> block at the end of <body>. */
 
+    /* Counter in the meta strip; the ::after widens the tap target without changing layout */
+    .ppg-count {
+      position: relative;
+      font: inherit;
+      letter-spacing: inherit;
+      text-transform: inherit;
+      color: inherit;
+      background: none;
+      border: 0;
+      padding: 0;
+      opacity: 0.75;
+      white-space: nowrap;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .ppg-count::after {
+      content: '';
+      position: absolute;
+      left: -10px;
+      right: -10px;
+      top: 50%;
+      height: 44px;
+      margin-top: -22px;
+    }
+    .ppg-count-alone {
+      position: absolute;
+      z-index: 8;
+      font: 11px 'Special Elite', 'Courier New', monospace;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--white);
+    }
+
+    /* LOST flyer, positioned by script */
+    .ppg-flyer {
+      position: absolute;
+      left: 0;
+      top: 0;
+      z-index: 8;
+      visibility: hidden;
+      width: 132px;
+      padding: 14px 10px 8px;
+      background: #f2eee3;
+      color: var(--black);
+      border: 0;
+      font-family: 'Special Elite', 'Courier New', monospace;
+      text-align: left;
+      transform: rotate(-2deg);
+      box-shadow: 2px 3px 0 rgba(0,0,0,0.35);
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .ppg-flyer::before {
+      content: '';
+      position: absolute;
+      top: -7px;
+      left: 50%;
+      width: 44px;
+      height: 14px;
+      margin-left: -22px;
+      background: rgba(235,225,200,0.75);
+      transform: rotate(3deg);
+    }
+    .ppg-flyer > span { display: block; }
+    .ppg-flyer-h { font-size: 17px; letter-spacing: 0.12em; line-height: 1; }
+    .ppg-flyer-b { font-size: 9px; line-height: 1.25; margin-top: 4px; }
+    .ppg-flyer-f { font-size: 8px; margin-top: 4px; opacity: 0.75; }
+    .ppg-flyer-compact { width: auto; padding: 12px 10px 6px; }
+    .ppg-flyer-compact .ppg-flyer-b { display: none; }
+
+    /* Speech bar: Pedro's line, tries, controls. Fixed to the top while a round is open. */
+    .ppg-bar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 950;
+      background: var(--black);
+      color: var(--white);
+      border-bottom: 2px solid var(--white);
+      font-family: 'Special Elite', 'Courier New', monospace;
+      font-size: 15px;
+      line-height: 1.3;
+      padding: 4px 4px 4px 16px;
+      padding-top: max(4px, env(safe-area-inset-top));
+    }
+    .ppg-bar[hidden], .ppg-bar [hidden] { display: none; }
+    .ppg-row { display: flex; align-items: center; gap: 8px; min-height: 44px; }
+    .ppg-line { flex: 1; min-width: 0; }
+    .ppg-rest { visibility: hidden; }
+    .ppg-tries {
+      font-size: 11px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      opacity: 0.75;
+      white-space: nowrap;
+    }
+    .ppg-btn {
+      min-width: 44px;
+      min-height: 44px;
+      padding: 0 12px;
+      background: none;
+      color: inherit;
+      border: 1px solid rgba(255,255,255,0.5);
+      font: inherit;
+      font-size: 13px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .ppg-x { border: 0; padding: 0; font-size: 26px; line-height: 1; }
+
+    .ppg-sr {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip: rect(0 0 0 0);
+      clip-path: inset(50%);
+      white-space: nowrap;
+    }
+
+    .ppg-flyer:focus-visible, .ppg-count:focus-visible, .ppg-btn:focus-visible {
+      outline: 3px solid #ffcc00;
+      outline-offset: 2px;
+    }
+
+    @media (min-width: 720px) {
+      .ppg-flyer { width: 170px; }
+      .ppg-flyer-h { font-size: 22px; }
+      .ppg-flyer-b { font-size: 11px; }
+      .ppg-flyer-f { font-size: 10px; }
+      .ppg-bar { padding-left: 40px; padding-right: 28px; font-size: 17px; }
+    }
+
     /* ===== END FIND PEDRO'S SUNGLASSES ===== */
   </style>
 </head>
@@ -710,6 +846,75 @@
   (function () {
     'use strict';
 
+    // ── Copy (placeholder: edit freely) ───────────────
+    const FLYER = {
+      heading: 'LOST',
+      body: 'One pair of sunglasses. Black. Small oval mirror lenses. Answers to "Hey".',
+      footer: 'Reward: unclear.',
+    };
+
+    const PEDRO_LINES = {
+      start: ['Look around.', 'They were here a minute ago.', 'I put them down somewhere. Somewhere here.', 'Have a look. I\'ll wait.', 'Not again.', 'Check everywhere. Within reason.'],
+      hot: ['Hot.', 'Hot. Very close.', 'Hot. I can almost see them.', 'Hot. Right around there.', 'That\'s hot.', 'Hot. Careful.'],
+      warm: ['Warm.', 'Warm-ish.', 'Warm. Not bad.', 'Warm. Getting somewhere.', 'Lukewarm. Call it warm.', 'Warm. Keep at it.'],
+      cold: ['Cold.', 'Cold. Very cold.', 'Cold. Nowhere near.', 'Cold. Try somewhere else.', 'That\'s cold.', 'Cold. Like Finland.'],
+      warmer: ['Warmer.', 'Warmer. Good.', 'Warmer than before.', 'Warmer. Keep going that way.', 'A bit warmer.', 'Warmer. Nice.'],
+      colder: ['Colder.', 'Colder. Wrong way.', 'Colder than before.', 'Colder. Turn around.', 'Colder. Sorry.', 'Colder. Much colder? No. Just colder.'],
+      same: ['Same as before.', 'About the same.', 'Same distance. Interesting.', 'No warmer, no colder.', 'Same. Hm.', 'Neither. Same.'],
+      region_top: ['Top half.', 'Top half of the page.', 'Somewhere in the top half.', 'Up top. Somewhere.', 'Top half. I\'m sure of that much.', 'They\'re in the top half.'],
+      region_bottom: ['Bottom half.', 'Bottom half of the page.', 'Somewhere in the bottom half.', 'Down low. Somewhere.', 'Bottom half. I\'m sure of that much.', 'They\'re in the bottom half.'],
+      region_left: ['Left side.', 'Left side of the page.', 'Somewhere on the left.', 'Left. Definitely left.', 'Left side. I\'m sure of that much.', 'They\'re on the left.'],
+      region_right: ['Right side.', 'Right side of the page.', 'Somewhere on the right.', 'Right. Definitely right.', 'Right side. I\'m sure of that much.', 'They\'re on the right.'],
+      silent: ['Hm.', 'Keep going.', 'No.', 'Not there.', 'Nope.', 'Mm.'],
+      decoy: ['Those are mine. Wait, no.', 'Not those. Those are someone else\'s.', 'Close. Wrong pair.', 'Those are for skiing.', 'Not mine. Too fancy.', 'Where did those come from?'],
+      found: ['There they are.', 'Oh. Thanks.', 'Found them. Great. Now what.', 'Ah. That\'s where I left them.', 'Hey. That\'s them.', 'Yes. Those. Thank you.'],
+      failed: ['Never mind. I\'ll squint.', 'They were there. Of course.', 'Oh well. There they were.', 'Out of tries. They were right there.', 'Never mind. Cloudy anyway.', 'That\'s where they were. Who knew.'],
+      daily_done: ['That\'s today\'s done. This one\'s extra.', 'Today\'s pair is sorted. Here\'s a spare.', 'You\'ve had today\'s. This is practice.', 'Daily\'s done. New one tomorrow. Meanwhile:', 'Today\'s is done. I lose these a lot.', 'Another pair. Don\'t ask.'],
+    };
+
+    const TITLES = [
+      { at: 1,   title: 'Casual Listener' },
+      { at: 5,   title: 'Fan Club Member' },
+      { at: 10,  title: 'Front Row' },
+      { at: 25,  title: 'Roadie' },
+      { at: 50,  title: 'Sunglasses Custodian' },
+      { at: 100, title: 'Honorary Pedro' },
+    ];
+
+    const TEXT = {
+      game: 'Find Pedro\'s sunglasses',
+      counter: 'Shades found: ',
+      tries: 'Tries: ',
+      close: 'Close',
+      again: 'Again?',
+      share: 'Share',
+      copied: 'Copied',
+      copyHint: 'Copy this text to share it',
+      search: 'Search the ',
+      titleReached: 'You\'ve reached {title} level.',
+      statsTitle: 'Shades',
+      statFound: 'Shades found',
+      statTitle: 'Title',
+      noTitle: 'No title yet',
+      statNext: 'Next title',
+      nextIn: '{title} in {n}',
+      lastTitle: 'That was the last one',
+      statStreak: 'Streak',
+      statBest: 'Best streak',
+      statToday: 'Today\'s puzzle',
+      todayNone: 'Not played',
+      todayFound: 'Found in {used}/{max}',
+      todayFailed: 'Not found',
+      reset: 'Reset progress',
+      resetAsk: 'Erase all progress?',
+      resetYes: 'Yes, reset',
+      resetNo: 'Cancel',
+      shareTitle: 'Pedro\'s Sunglasses',
+      shareFound: 'Found in {used}/{max}',
+      shareFailed: 'Not found ({used}/{max})',
+      shareUrl: 'pedropazzo.com',
+    };
+
     // ── Switches ──────────────────────────────────────
     const GAME_ENABLED = true;
 
@@ -771,6 +976,174 @@
     }
 
     let state = loadState();
+
+    // ── Helpers ───────────────────────────────────────
+    const make = (tag, cls, text) => {
+      const e = document.createElement(tag);
+      if (cls) e.className = cls;
+      if (text != null) e.textContent = text;
+      return e;
+    };
+    const button = (cls, text, onClick) => {
+      const b = make('button', cls, text);
+      b.type = 'button';
+      b.addEventListener('click', onClick);
+      return b;
+    };
+    const fmt = (s, o) => s.replace(/\{(\w+)\}/g, (m, k) => o[k]);
+    const pickLine = cat => { const p = PEDRO_LINES[cat] || []; return p[Math.floor(Math.random() * p.length)] || ''; };
+    const reduced = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const hasText = n => Array.prototype.some.call(n.childNodes, c => c.nodeType === 3 && c.nodeValue.trim());
+
+    // Registered spots that exist and are displayed right now.
+    function resolveSpots() {
+      const out = [];
+      SPOTS.forEach(def => {
+        const els = def.each ? Array.prototype.slice.call(document.querySelectorAll(def.each)) : [document.querySelector(def.selector)];
+        els.forEach((e, i) => {
+          if (!e || !e.getClientRects().length) return;
+          out.push({ id: def.each ? def.id + '-' + (i + 1) : def.id, def: def, idx: i });
+        });
+      });
+      return out;
+    }
+    const spotEl = sp => sp.def.each ? document.querySelectorAll(sp.def.each)[sp.idx] : document.querySelector(sp.def.selector);
+
+    // ── UI: flyer, counter, speech bar, live region ───
+    const flyer = button('ppg-flyer', null, () => onFlyer());
+    flyer.append(make('span', 'ppg-flyer-h', FLYER.heading), make('span', 'ppg-flyer-b', FLYER.body), make('span', 'ppg-flyer-f', FLYER.footer));
+
+    const counter = button('ppg-count', null, () => openStats());
+    counter.setAttribute('aria-haspopup', 'dialog');
+    const meta = document.querySelector('.meta');
+    if (meta) meta.insertBefore(counter, meta.children[1] || null);
+    else counter.classList.add('ppg-count-alone'); // placed under the flyer
+
+    const bar = make('div', 'ppg-bar');
+    bar.hidden = true;
+    bar.setAttribute('role', 'region');
+    bar.setAttribute('aria-label', TEXT.game);
+    const row = make('div', 'ppg-row');
+    const lineEl = make('p', 'ppg-line');
+    lineEl.setAttribute('aria-hidden', 'true');
+    const typed = make('span'), rest = make('span', 'ppg-rest');
+    lineEl.append(typed, rest);
+    const triesEl = make('span', 'ppg-tries');
+    const closeBtn = button('ppg-btn ppg-x', '×', () => closeBar());
+    closeBtn.setAttribute('aria-label', TEXT.close);
+    row.append(lineEl, triesEl, closeBtn);
+    bar.append(row);
+
+    const live = make('div', 'ppg-sr');
+    live.setAttribute('aria-live', 'polite');
+
+    document.body.append(flyer, bar, live);
+    if (!meta) document.body.append(counter);
+
+    function updateCounter() { counter.textContent = TEXT.counter + state.finds; }
+
+    // Pedro speaks: typewriter for the eyes (aria-hidden), whole line at once for screen readers.
+    let typing = 0, announcing = 0;
+    function say(text) {
+      clearInterval(typing);
+      clearTimeout(announcing);
+      live.textContent = '';
+      announcing = setTimeout(() => { live.textContent = text; }, 60);
+      let i = reduced() ? text.length : 0;
+      const draw = () => { typed.textContent = text.slice(0, i); rest.textContent = text.slice(i); };
+      draw();
+      if (i < text.length) typing = setInterval(() => { i++; draw(); if (i >= text.length) clearInterval(typing); }, 28);
+    }
+
+    function onKey(e) { if (e.key === 'Escape') closeBar(); }
+    function showBar() {
+      bar.hidden = false;
+      document.addEventListener('keydown', onKey);
+    }
+    function closeBar() {
+      clearInterval(typing);
+      bar.hidden = true;
+      document.removeEventListener('keydown', onKey);
+      flyer.focus();
+    }
+
+    function onFlyer() {
+      showBar();
+      say(PEDRO_LINES.start[0]);
+    }
+    function openStats() {}
+
+    // Flyer placement: the free spot closest to "just above the tickets" that covers the least.
+    // Recomputed on resize, so it keeps finding room as the page changes.
+    function obstacles() {
+      const heavy = resolveSpots().map(spotEl);
+      const out = [{ l: 0, t: 0, r: innerWidth, b: 60, w: 3 }]; // keep clear of the speech bar
+      document.querySelectorAll('body *').forEach(n => {
+        if (/^(SCRIPT|STYLE|TEXTAREA)$/.test(n.tagName)) return;
+        if (n.closest('.ppg-flyer, .ppg-bar, .ppg-layer, .ppg-count-alone, [aria-hidden="true"]')) return;
+        if (!/^(svg|IMG|A|BUTTON)$/.test(n.tagName) && !hasText(n)) return;
+        const r = n.getBoundingClientRect();
+        if (!r.width || !r.height) return;
+        const w = n.closest('a, button') || heavy.some(e => e && e.contains(n)) ? 20 : 3;
+        out.push({ l: r.left, t: r.top, r: r.right, b: r.bottom, w: w });
+      });
+      return out;
+    }
+
+    function freeSpot(blocks) {
+      const fw = flyer.offsetWidth, fh = flyer.offsetHeight + (meta ? 0 : 26);
+      const vw = document.documentElement.clientWidth, vh = innerHeight;
+      const ticket = document.querySelector('.links .ticket');
+      let px = vw - 16 - fw, py = vh * 0.55;
+      if (ticket) {
+        py = ticket.getBoundingClientRect().top - 10 - fh;
+        if (vw >= 720) px = vw / 2 + 20;
+      }
+      let best = { c: Infinity, o: Infinity, x: Math.max(8, px), y: Math.max(8, py) };
+      for (let y = 8; y <= vh - fh - 8; y += 8) {
+        for (let x = 8; x <= vw - fw - 8; x += 8) {
+          const d = Math.hypot(x - px, y - py) * 0.6;
+          let o = 0;
+          for (let i = 0; i < blocks.length && d + o < best.c; i++) {
+            const b = blocks[i];
+            const ox = Math.min(x + fw + 6, b.r) - Math.max(x - 6, b.l), oy = Math.min(y + fh + 6, b.b) - Math.max(y - 6, b.t);
+            if (ox > 0 && oy > 0) o += ox * oy * b.w;
+          }
+          if (d + o < best.c) best = { c: d + o, o: o, x: x, y: y };
+        }
+      }
+      return best;
+    }
+
+    function placeFlyer() {
+      const blocks = obstacles();
+      flyer.classList.remove('ppg-flyer-compact');
+      let best = freeSpot(blocks);
+      if (best.o > 0) { // no clear space: try the compact flyer
+        flyer.classList.add('ppg-flyer-compact');
+        const small = freeSpot(blocks);
+        if (small.o < best.o) best = small;
+        else flyer.classList.remove('ppg-flyer-compact');
+      }
+      flyer.style.left = best.x + scrollX + 'px';
+      flyer.style.top = best.y + scrollY + 'px';
+      flyer.style.visibility = 'visible';
+      if (!meta) {
+        counter.style.left = best.x + scrollX + 'px';
+        counter.style.top = best.y + scrollY + flyer.offsetHeight + 8 + 'px';
+      }
+    }
+
+    let resizing = 0;
+    function onResize() {
+      cancelAnimationFrame(resizing);
+      resizing = requestAnimationFrame(placeFlyer);
+    }
+
+    updateCounter();
+    placeFlyer();
+    window.addEventListener('resize', onResize);
+    if (document.fonts) document.fonts.ready.then(placeFlyer, () => {});
   })();
   /* ===== END FIND PEDRO'S SUNGLASSES ===== */
   </script>
