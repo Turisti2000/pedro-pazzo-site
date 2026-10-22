@@ -396,31 +396,39 @@
     /* Easter-egg game styles. Remove together with the game <script> block at the end of <body>. */
 
     /* Shared button reset */
-    .ppg-count, .ppg-flyer, .ppg-btn, .ppg-hit, .ppg-link {
+    .ppg-count, .ppg-ask, .ppg-btn, .ppg-hit, .ppg-link {
       padding: 0; border: 0; background: none; color: inherit; font: inherit;
       cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-color: transparent;
     }
-    .ppg-flyer:focus-visible, .ppg-count:focus-visible, .ppg-btn:focus-visible, .ppg-link:focus-visible { outline: 3px solid #ffcc00; outline-offset: 2px; }
+    .ppg-ask:focus-visible, .ppg-count:focus-visible, .ppg-btn:focus-visible, .ppg-link:focus-visible { outline: 3px solid #ffcc00; outline-offset: 2px; }
 
     /* Counter in the meta strip; ::after widens the tap target without changing layout */
     .ppg-count { position: relative; letter-spacing: inherit; text-transform: inherit; opacity: 0.75; white-space: nowrap; }
     .ppg-count::after { content: ''; position: absolute; left: -10px; right: -10px; top: 50%; height: 44px; margin-top: -22px; }
     .ppg-count-alone { position: fixed; left: 16px; bottom: 8px; z-index: 8; font: 11px 'Special Elite', monospace; letter-spacing: 0.22em; text-transform: uppercase; color: var(--white); }
 
-    /* LOST flyer, positioned by script */
-    .ppg-flyer {
-      position: absolute; left: 0; top: 0; z-index: 8; visibility: hidden;
-      width: 132px; padding: 14px 10px 8px; text-align: left;
-      background: #f2eee3; color: var(--black); font-family: 'Special Elite', 'Courier New', monospace;
-      transform: rotate(-2deg); box-shadow: 2px 3px 0 rgba(0,0,0,0.35);
+    /* "Where are my shades?" button, positioned by script */
+    .ppg-ask {
+      position: absolute; left: 0; top: 0; z-index: 8; visibility: hidden; min-height: 44px; padding: 0 6px;
+      font: 11px 'Special Elite', 'Courier New', monospace; letter-spacing: 0.18em; text-transform: uppercase;
+      white-space: nowrap; opacity: 0.6; text-decoration: underline dotted; text-underline-offset: 4px;
     }
-    .ppg-flyer::before { content: ''; position: absolute; top: -7px; left: 50%; width: 44px; height: 14px; margin-left: -22px; background: rgba(235,225,200,0.75); transform: rotate(3deg); }
-    .ppg-flyer > span { display: block; }
-    .ppg-flyer-h { font-size: 17px; letter-spacing: 0.12em; line-height: 1; }
-    .ppg-flyer-b { font-size: 9px; line-height: 1.25; margin-top: 4px; }
-    .ppg-flyer-f { font-size: 8px; margin-top: 4px; opacity: 0.75; }
-    .ppg-flyer-compact { width: auto; padding: 12px 10px 6px; }
-    .ppg-flyer-compact .ppg-flyer-b { display: none; }
+    .ppg-ask[aria-expanded="true"] { opacity: 1; }
+
+    /* LOST note that pops out of the button */
+    .ppg-note {
+      position: absolute; left: 0; top: 0; z-index: 940; width: 180px; padding: 16px 12px 10px; text-align: left;
+      background: #f2eee3; color: var(--black); font-family: 'Special Elite', 'Courier New', monospace;
+      transform: rotate(-2deg); box-shadow: 2px 3px 0 rgba(0,0,0,0.35); animation: ppg-unfold 0.25s ease-out;
+    }
+    .ppg-note[hidden] { display: none; }
+    .ppg-note::before { content: ''; position: absolute; top: -7px; left: 50%; width: 44px; height: 14px; margin-left: -22px; background: rgba(235,225,200,0.75); transform: rotate(3deg); }
+    .ppg-note > span { display: block; }
+    .ppg-note-h { font-size: 22px; letter-spacing: 0.12em; line-height: 1; }
+    .ppg-note-b { font-size: 12px; line-height: 1.3; margin-top: 6px; }
+    .ppg-note-f { font-size: 10px; margin-top: 6px; opacity: 0.75; }
+    .ppg-note .ppg-btn { width: 100%; margin-top: 10px; border-color: var(--black); }
+    .ppg-note .ppg-btn:focus-visible { outline-color: var(--black); }
 
     /* Speech bar: Pedro's line, tries and controls; at the top while searching */
     .ppg-bar {
@@ -467,6 +475,7 @@
       60% { translate: -2px 0; rotate: -1deg; }
       80% { translate: 1px 0; rotate: 0.5deg; }
     }
+    @keyframes ppg-unfold { from { opacity: 0; transform: scale(0.15) rotate(-12deg); } }
     @keyframes ppg-fade-in { from { opacity: 0; } }
     @keyframes ppg-fade-out { to { opacity: 0; } }
 
@@ -490,15 +499,13 @@
     .ppg-link { min-height: 44px; text-decoration: underline; }
 
     @media (min-width: 720px) {
-      .ppg-flyer { width: 170px; }
-      .ppg-flyer-h { font-size: 22px; }
-      .ppg-flyer-b { font-size: 11px; }
-      .ppg-flyer-f { font-size: 10px; }
+      .ppg-ask { font-size: 13px; }
+      .ppg-note { width: 210px; }
       .ppg-bar { padding-left: 40px; padding-right: 28px; font-size: 17px; }
       .ppg-sprite { width: 96px; height: 39px; margin: -20px 0 0 -48px; }
     }
     @media (prefers-reduced-motion: reduce) {
-      .ppg-sprite { animation: ppg-fade-in 0.3s; }
+      .ppg-sprite, .ppg-note { animation: ppg-fade-in 0.3s; }
       .ppg-ring { animation: ppg-fade-out 0.6s forwards; }
       .ppg-wiggle { animation: none; }
     }
@@ -818,10 +825,13 @@
     'use strict';
 
     // ── Copy (placeholder: edit freely) ───────────────
+    // The small button on the page, and the LOST note it pops open.
     const FLYER = {
+      button: 'Where are my shades?',
       heading: 'LOST',
       body: 'One pair of sunglasses. Black. Small oval mirror lenses. Answers to "Hey".',
       footer: 'Reward: unclear.',
+      start: 'Help look',
     };
 
     const PEDRO_LINES = {
@@ -1041,9 +1051,15 @@
       return { all: all, hide: ranked[0], decoys: ranked.slice(1, 1 + Math.min(decoys, ranked.length - 2)) };
     }
 
-    // ── UI: flyer, counter, speech bar, live region ───
-    const flyer = button('ppg-flyer', null, () => onFlyer());
-    flyer.append(make('span', 'ppg-flyer-h', FLYER.heading), make('span', 'ppg-flyer-b', FLYER.body), make('span', 'ppg-flyer-f', FLYER.footer));
+    // ── UI: button + LOST note, counter, speech bar, live region ───
+    const ask = button('ppg-ask', FLYER.button, () => (note.hidden ? openNote() : closeNote(true)));
+    ask.setAttribute('aria-expanded', 'false');
+    ask.setAttribute('aria-controls', 'ppg-note');
+    const note = make('div', 'ppg-note');
+    note.id = 'ppg-note';
+    note.hidden = true;
+    const look = button('ppg-btn', FLYER.start, () => { closeNote(); startRound(); });
+    note.append(make('span', 'ppg-note-h', FLYER.heading), make('span', 'ppg-note-b', FLYER.body), make('span', 'ppg-note-f', FLYER.footer), look);
 
     const counter = button('ppg-count', null, () => openStats());
     counter.setAttribute('aria-haspopup', 'dialog');
@@ -1083,7 +1099,7 @@
 
     const layer = make('div', 'ppg-layer'); // search targets and revealed glasses
 
-    document.body.append(flyer, bar, live, layer);
+    document.body.append(ask, note, bar, live, layer);
     if (!meta) document.body.append(counter);
 
     function updateCounter() { counter.textContent = TEXT.counter + state.finds; }
@@ -1129,7 +1145,40 @@
       clearInterval(typing);
       bar.hidden = true;
       document.removeEventListener('keydown', onKey);
-      flyer.focus();
+      ask.focus();
+    }
+
+    // The LOST note: opens next to the button, closes on Escape, an outside tap or focus leaving.
+    function openNote() {
+      note.hidden = false;
+      ask.setAttribute('aria-expanded', 'true');
+      placeNote();
+      document.addEventListener('keydown', noteKey);
+      document.addEventListener('click', noteOutside, true);
+      look.focus();
+    }
+    function closeNote(back) {
+      if (note.hidden) return;
+      note.hidden = true;
+      ask.setAttribute('aria-expanded', 'false');
+      document.removeEventListener('keydown', noteKey);
+      document.removeEventListener('click', noteOutside, true);
+      if (back) ask.focus();
+    }
+    function noteKey(e) { if (e.key === 'Escape') closeNote(true); }
+    function noteOutside(e) { if (!note.contains(e.target) && !ask.contains(e.target)) closeNote(); }
+    const leaveNote = e => { if (e.relatedTarget && !note.contains(e.relatedTarget) && e.relatedTarget !== ask) closeNote(); };
+    note.addEventListener('focusout', leaveNote);
+    ask.addEventListener('focusout', leaveNote);
+    // Above the button if it fits, else below; grows out of the button.
+    function placeNote() {
+      const a = ask.getBoundingClientRect(), nw = note.offsetWidth, nh = note.offsetHeight;
+      const x = Math.max(8, Math.min(a.right - nw, document.documentElement.clientWidth - nw - 8));
+      const above = a.top - nh - 6 >= 8;
+      const y = above ? a.top - nh - 6 : a.bottom + 6;
+      note.style.left = x + scrollX + 'px';
+      note.style.top = y + scrollY + 'px';
+      note.style.transformOrigin = (a.left + a.width / 2 - x) + 'px ' + (above ? nh + 'px' : '0');
     }
 
     // ── Search mode ───────────────────────────────────
@@ -1395,8 +1444,6 @@
       say(pickLine('failed'));
     }
 
-    function onFlyer() { startRound(); }
-
     // ── Daily: dates, streak, share ───────────────────
     const dateKey = d => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
     const dayBefore = key => { const p = key.split('-'); return dateKey(new Date(+p[0], p[1] - 1, p[2] - 1)); };
@@ -1515,14 +1562,14 @@
       return close;
     }
 
-    // Flyer placement: the spot nearest "just above the tickets" that covers the least,
+    // Button placement: the spot nearest "just above the tickets" that covers the least,
     // recomputed on resize so it keeps finding room as the page changes.
     function obstacles() {
       const heavy = resolveSpots().map(spotEl);
       const out = [{ l: 0, t: 0, r: innerWidth, b: 60, w: 3 }]; // keep clear of the speech bar
       document.querySelectorAll('body *').forEach(n => {
         if (/^(SCRIPT|STYLE|TEXTAREA)$/.test(n.tagName)) return;
-        if (n.closest('.ppg-flyer, .ppg-bar, .ppg-layer, [aria-hidden="true"]')) return;
+        if (n.closest('.ppg-ask, .ppg-note, .ppg-bar, .ppg-layer, [aria-hidden="true"]')) return;
         if (!/^(svg|IMG|A|BUTTON)$/.test(n.tagName) && !hasText(n)) return;
         const r = n.getBoundingClientRect();
         if (!r.width || !r.height) return;
@@ -1533,7 +1580,7 @@
     }
 
     function freeSpot(blocks) {
-      const fw = flyer.offsetWidth, fh = flyer.offsetHeight;
+      const fw = ask.offsetWidth, fh = ask.offsetHeight;
       const vw = document.documentElement.clientWidth, vh = innerHeight;
       const ticket = document.querySelector('.links .ticket');
       let px = vw - 16 - fw, py = vh * 0.55;
@@ -1557,26 +1604,19 @@
       return best;
     }
 
-    function placeFlyer() {
-      const blocks = obstacles();
-      flyer.classList.remove('ppg-flyer-compact');
-      let best = freeSpot(blocks);
-      if (best.o > 0) { // no clear space: try the compact flyer
-        flyer.classList.add('ppg-flyer-compact');
-        const small = freeSpot(blocks);
-        if (small.o < best.o) best = small;
-        else flyer.classList.remove('ppg-flyer-compact');
-      }
-      flyer.style.left = best.x + scrollX + 'px';
-      flyer.style.top = best.y + scrollY + 'px';
-      flyer.style.visibility = 'visible';
+    function placeAsk() {
+      const best = freeSpot(obstacles());
+      ask.style.left = best.x + scrollX + 'px';
+      ask.style.top = best.y + scrollY + 'px';
+      ask.style.visibility = 'visible';
+      if (!note.hidden) placeNote();
     }
 
     let resizing = 0;
     function onResize() {
       cancelAnimationFrame(resizing);
       resizing = requestAnimationFrame(() => {
-        placeFlyer();
+        placeAsk();
         layoutHits();
         sprites.forEach(placeSprite);
       });
@@ -1584,9 +1624,9 @@
 
     checkStreak();
     updateCounter();
-    placeFlyer();
+    placeAsk();
     window.addEventListener('resize', onResize);
-    if (document.fonts) document.fonts.ready.then(placeFlyer, () => {});
+    if (document.fonts) document.fonts.ready.then(placeAsk, () => {});
   })();
   /* ===== END FIND PEDRO'S SUNGLASSES ===== */
   </script>
